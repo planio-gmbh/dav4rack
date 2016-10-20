@@ -522,7 +522,9 @@ module DAV4Rack
       if collection? and ret[-1,1] != '/'
         ret += '/'
       end
-      ret
+      # Additionally escape square brackets, otherwise files with 
+      # file names like file[1].pdf are not visible in some WebDAV clients
+      URI.escape ret, '[]'
     end
 
     # Does client allow GET redirection
