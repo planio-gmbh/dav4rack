@@ -142,7 +142,12 @@ module DAV4Rack
         resource.lock_check if resource.supports_locking? && !args.include?(:copy)
         destination = url_unescape(env['HTTP_DESTINATION'].sub(%r{https?://([^/]+)}, ''))
         dest_host = $1
-        if(dest_host && dest_host.gsub(/:\d{2,5}$/, '') != request.host)
+        if dest_host
+          dest_host.sub!(/^.+@/, '')
+          dest_host.sub!(/:\d{2,5}$/, '')
+        end
+
+        if(dest_host && dest_host != request.host)
           BadGateway
         elsif(destination == resource.public_path)
           Forbidden
