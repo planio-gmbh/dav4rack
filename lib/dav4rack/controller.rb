@@ -182,8 +182,13 @@ module DAV4Rack
       unless(resource.exist?)
         NotFound
       else
-        if !request_document.xpath("//#{ns}propfind/#{ns}allprop").empty? or (request.content_length == '0') or (request.content_length.nil?)
+        if request_document.xpath("//#{ns}propfind").empty? or
+          !request_document.xpath("//#{ns}propfind/#{ns}allprop").empty? or
+          (request.content_length == '0') or
+          (request.content_length.nil?)
+
           properties = resource.properties
+
         else
           check = request_document.xpath("//#{ns}propfind")
           if(check && !check.empty?)
