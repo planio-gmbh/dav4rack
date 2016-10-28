@@ -16,6 +16,17 @@ adding some useful new features:
 If you find issues, please create a new issue on github. If you have fixes, please fork the repo and send me
 a pull request with your modifications. If you are just here to use the library, enjoy!
 
+== About this fork
+
+This is the {Planio}[https://plan.io/redmine-hosting] fork of DAV4Rack. The
+master branch includes improvements and fixes done by @djgraham and
+@tim-vandecasteele in their respective forks on Github.
+
+It also incorporates various fixes that were made as part of the redmine_dmsf
+plugin (branch dmsf-fixes), as well as improvements done by ourselves during
+development of an upcoming redmine document management plugin (branch redmine-storage).
+
+
 == Install
 
 === Via RubyGems
