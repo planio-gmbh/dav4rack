@@ -23,18 +23,22 @@ module DAV4Rack
         Logger.info "Processing WebDAV request: #{request.path} (for #{request.ip} at #{Time.now}) [#{request.request_method}]"
         
         controller = nil
+        res = nil
         begin
           controller_class = @options[:controller_class] || Controller
           controller = controller_class.new(request, response, @options.dup)
           controller.authenticate
           res = controller.send(request.request_method.downcase)
-          response.status = res.code if res.respond_to?(:code)
-        rescue HTTPStatus::Unauthorized => status
-          response.body = controller.resource.respond_to?(:authentication_error_msg) ? controller.resource.authentication_error_msg : 'Not Authorized'
-          response['WWW-Authenticate'] = "Basic realm=\"#{controller.resource.respond_to?(:authentication_realm) ? controller.resource.authentication_realm : 'Locked content'}\""
-          response.status = status.code
         rescue HTTPStatus::Status => status
-          response.status = status.code
+          res = status
+        ensure
+          if res.respond_to?(:code)
+            response.status = res.code
+            if res.code == 401
+              response.body = controller.resource.respond_to?(:authentication_error_msg) ? controller.resource.authentication_error_msg : 'Not Authorized'
+              response['WWW-Authenticate'] = "Basic realm=\"#{controller.resource.respond_to?(:authentication_realm) ? controller.resource.authentication_realm : 'Locked content'}\""
+            end
+          end
         end
 
         # Strings in Ruby 1.9 are no longer enumerable.  Rack still expects the response.body to be
