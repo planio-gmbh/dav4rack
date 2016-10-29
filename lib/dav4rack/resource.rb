@@ -375,7 +375,7 @@ module DAV4Rack
       new_path = path.dup
       new_path = new_path + '/' unless new_path[-1,1] == '/'
       new_path = '/' + new_path unless new_path[0,1] == '/'
-      self.class.new("#{new_public}#{name}", "#{new_path}#{name}", request, response, options.merge(:user => @user))
+      self.class.new("#{new_public}#{name}", "#{new_path}#{name}", request, response, options.merge(:user => @user, :namespaces => @namespaces))
     end
 
     # Return parent of this resource
@@ -484,6 +484,14 @@ module DAV4Rack
       []
     end
 
+    # adds the given xml namespace to namespaces and returns the prefix
+    def add_namespace(ns, prefix = "unknown#{rand 65536}")
+      unless namespaces.key? ns
+        namespaces[ns] = prefix
+        return prefix
+      end
+    end
+
     # xml:: Nokogiri::XML::Builder
     # stats:: Array of stats
     # Build propstats response
@@ -498,7 +506,9 @@ module DAV4Rack
         prop = Ox::Element.new(D_PROP)
 
         props.each do |element, value|
-          prefix = namespaces[element[:ns_href]]
+          unless prefix = namespaces[element[:ns_href]]
+            prefix = add_namespace element[:ns_href]
+          end
           if(value.is_a?(Symbol))
             prop << (Ox::Element.new("#{prefix}:#{element[:name]}") << Ox::Element.new("#{prefix}:#{value}"))
           else
