@@ -215,8 +215,8 @@ module DAV4Rack
     # (http://www.webdav.org/specs/rfc4918.html#rfc.section.9.10)
 
     def lock(args)
-      return NotImplemented unless @lock_class
-      return Conflict       unless parent_exists?
+      raise NotImplemented unless @lock_class
+      raise Conflict       unless parent_exists?
 
       lock_check(args[:scope])
       lock = @lock_class.explicit_locks(@path).find{|l| l.scope == args[:scope] && l.kind == args[:type] && l.user == @user}
