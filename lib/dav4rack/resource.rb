@@ -218,31 +218,31 @@ module DAV4Rack
       return NotImplemented unless @lock_class
       return Conflict       unless parent_exists?
 
-          lock_check(args[:scope])
-          lock = @lock_class.explicit_locks(@path).find{|l| l.scope == args[:scope] && l.kind == args[:type] && l.user == @user}
-          unless(lock)
-            token = UUIDTools::UUID.random_create.to_s
-            lock = @lock_class.generate(@path, @user, token)
-            lock.scope = args[:scope]
-            lock.kind = args[:type]
-            lock.owner = args[:owner]
-            lock.depth = args[:depth].is_a?(Symbol) ? args[:depth] : args[:depth].to_i
-            if(args[:timeout])
-              lock.timeout = args[:timeout] <= @max_timeout && args[:timeout] > 0 ? args[:timeout] : @max_timeout
-            else
-              lock.timeout = @default_timeout
-            end
-            lock.save if lock.respond_to? :save
-          end
-          begin
-            lock_check(args[:type])
-          rescue DAV4Rack::LockFailure => lock_failure
-            lock.destroy
-            raise lock_failure
-          rescue HTTPStatus::Status => status
-            status
-          end
-          [lock.remaining_timeout, lock.token]
+      lock_check(args[:scope])
+      lock = @lock_class.explicit_locks(@path).find{|l| l.scope == args[:scope] && l.kind == args[:type] && l.user == @user}
+      unless(lock)
+        token = UUIDTools::UUID.random_create.to_s
+        lock = @lock_class.generate(@path, @user, token)
+        lock.scope = args[:scope]
+        lock.kind = args[:type]
+        lock.owner = args[:owner]
+        lock.depth = args[:depth].is_a?(Symbol) ? args[:depth] : args[:depth].to_i
+        if(args[:timeout])
+          lock.timeout = args[:timeout] <= @max_timeout && args[:timeout] > 0 ? args[:timeout] : @max_timeout
+        else
+          lock.timeout = @default_timeout
+        end
+        lock.save if lock.respond_to? :save
+      end
+      begin
+        lock_check(args[:type])
+      rescue DAV4Rack::LockFailure => lock_failure
+        lock.destroy
+        raise lock_failure
+      rescue HTTPStatus::Status => status
+        status
+      end
+      [lock.remaining_timeout, lock.token]
     end
 
     # lock_scope:: scope of lock
@@ -277,20 +277,20 @@ module DAV4Rack
     def unlock(token)
       return NotImplemented unless @lock_class
 
-        token = token.slice(1, token.length - 2)
-        if(token.nil? || token.empty?)
-          BadRequest
+      token = token.slice(1, token.length - 2)
+      if(token.nil? || token.empty?)
+        BadRequest
+      else
+        lock = @lock_class.find_by_token(token)
+        if(lock.nil? || lock.user != @user)
+          Forbidden
+        elsif(lock.path !~ /^#{Regexp.escape(@path)}.*$/)
+          Conflict
         else
-          lock = @lock_class.find_by_token(token)
-          if(lock.nil? || lock.user != @user)
-            Forbidden
-          elsif(lock.path !~ /^#{Regexp.escape(@path)}.*$/)
-            Conflict
-          else
-            lock.destroy
-            NoContent
-          end
+          lock.destroy
+          NoContent
         end
+      end
     end
 
 
