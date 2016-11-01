@@ -215,12 +215,9 @@ module DAV4Rack
     # (http://www.webdav.org/specs/rfc4918.html#rfc.section.9.10)
 
     def lock(args)
-      unless(@lock_class)
-        NotImplemented
-      else
-        unless(parent_exists?)
-          Conflict
-        else
+      return NotImplemented unless @lock_class
+      return Conflict       unless parent_exists?
+
           lock_check(args[:scope])
           lock = @lock_class.explicit_locks(@path).find{|l| l.scope == args[:scope] && l.kind == args[:type] && l.user == @user}
           unless(lock)
@@ -246,8 +243,6 @@ module DAV4Rack
             status
           end
           [lock.remaining_timeout, lock.token]
-        end
-      end
     end
 
     # lock_scope:: scope of lock
@@ -280,9 +275,8 @@ module DAV4Rack
     # token:: Lock token
     # Remove the given lock
     def unlock(token)
-      unless(@lock_class)
-        NotImplemented
-      else
+      return NotImplemented unless @lock_class
+
         token = token.slice(1, token.length - 2)
         if(token.nil? || token.empty?)
           BadRequest
@@ -297,7 +291,6 @@ module DAV4Rack
             NoContent
           end
         end
-      end
     end
 
 
