@@ -155,9 +155,10 @@ module DAV4Rack
           dest = resource_class.new(destination, clean_path(destination), @request, @response, @options.merge(:user => resource.user))
           status = nil
           if(args.include?(:copy))
-            status = resource.copy(dest, overwrite)
+            return BadRequest unless depth.is_a?(Symbol) || depth == 0
+            status = resource.copy(dest, overwrite, depth)
           else
-            return Conflict unless depth.is_a?(Symbol) || depth > 1
+            return BadRequest unless depth.is_a?(Symbol) || depth > 1
             status = resource.move(dest, overwrite)
           end
 

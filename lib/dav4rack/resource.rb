@@ -188,7 +188,7 @@ module DAV4Rack
     # HTTP COPY request.
     #
     # Copy this resource to given destination resource.
-    def copy(dest, overwrite=false)
+    def copy(dest, overwrite = false, depth = nil)
       NotImplemented
     end
 
