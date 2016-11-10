@@ -152,7 +152,6 @@ module DAV4Rack
         elsif(destination == resource.public_path)
           Forbidden
         else
-          collection = resource.collection?
           dest = resource_class.new(destination, clean_path(destination), @request, @response, @options.merge(:user => resource.user))
           status = nil
           if(args.include?(:copy))
@@ -161,18 +160,9 @@ module DAV4Rack
             return Conflict unless depth.is_a?(Symbol) || depth > 1
             status = resource.move(dest, overwrite)
           end
-          # RFC 2518
-          if collection
-            multistatus do |xml|
-              xml.response do
-                resource_to_check = status == Created ? dest : resource
-                xml.href "#{scheme}://#{host}:#{port}#{resource_to_check.url_format}"
-                xml.status "#{http_version} #{status.status_line}"
-              end
-            end
-          else
-            status
-          end
+
+          status
+
         end
       end
     end
