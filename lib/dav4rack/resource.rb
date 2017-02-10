@@ -473,8 +473,16 @@ module DAV4Rack
     # elements:: Property hashes (name, namespace, children)
     # Removes the given properties from a resource
     def remove_properties_with_status(properties)
-      remove_property(properties.first[:element])
-      []
+      stats = Hash.new { |h, k| h[k] = [] }
+      properties.each do |property|
+        val = self.remove_property(property[:element], property[:value])
+        if val.is_a?(Class)
+          stats[val] << property[:element]
+        else
+          stats[OK] << [property[:element], val]
+        end
+      end
+      stats
     end
 
     # adds the given xml namespace to namespaces and returns the prefix
