@@ -72,7 +72,7 @@ module DAV4Rack
     def initialize(public_path, path, request, response, options)
       @public_path = public_path
       @path = path
-      @propstat_relative_path = !!options.delete(:propstat_relative_path)
+      @propstat_relative_path = !!options[:propstat_relative_path]
       @root_xml_attributes = options.delete(:root_xml_attributes) || {}
       @namespaces = (options[:namespaces] || {}).merge({DAV_NAMESPACE => DAV_NAMESPACE_NAME})
       @request = request
