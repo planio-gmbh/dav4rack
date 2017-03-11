@@ -425,8 +425,8 @@ module DAV4Rack
       Ox.dump(partial_document, {indent: -1})
     end
 
-    D_RESPONSE = 'D:response'.freeze
-    D_HREF = 'D:href'.freeze
+    D_RESPONSE = "#{DAV_NAMESPACE_NAME}:response".freeze
+    D_HREF     = "#{DAV_NAMESPACE_NAME}:href".freeze
 
     def properties_xml(process_properties)
       response = Ox::Element.new(D_RESPONSE)
@@ -496,9 +496,9 @@ module DAV4Rack
     # xml:: Nokogiri::XML::Builder
     # stats:: Array of stats
     # Build propstats response
-    D_PROPSTAT = 'D:propstat'.freeze
-    D_PROP = 'D:prop'.freeze
-    D_STATUS = 'D:status'.freeze
+    D_PROPSTAT = "#{DAV_NAMESPACE_NAME}:propstat".freeze
+    D_PROP     = "#{DAV_NAMESPACE_NAME}:prop".freeze
+    D_STATUS   = "#{DAV_NAMESPACE_NAME}:status".freeze
 
     def propstats(response, stats)
       return if stats.empty?

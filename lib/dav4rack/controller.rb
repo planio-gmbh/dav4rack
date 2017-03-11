@@ -8,6 +8,8 @@ module DAV4Rack
 
     attr_reader :request, :response, :resource
 
+    D_MULTISTATUS = "#{::DAV4Rack::Resource::DAV_NAMESPACE_NAME}:multistatus".freeze
+
     # request:: Rack::Request
     # response:: Rack::Response
     # options:: Options hash
@@ -202,7 +204,7 @@ module DAV4Rack
           end
         end
 
-        multistatus = Ox::Element.new('D:multistatus')
+        multistatus = Ox::Element.new(D_MULTISTATUS)
 
         properties = properties.empty? ? resource.properties : properties
         properties.map!{|property| {element: property}}
@@ -215,6 +217,7 @@ module DAV4Rack
         MultiStatus
       end
     end
+
 
     # Return response to PROPPATCH
     def proppatch
@@ -237,7 +240,7 @@ module DAV4Rack
           end
         end
 
-        multistatus = Ox::Element.new('D:multistatus')
+        multistatus = Ox::Element.new(D_MULTISTATUS)
 
         multistatus << Ox::Raw.new(resource.properties_xml_with_depth(properties, depth))
 
