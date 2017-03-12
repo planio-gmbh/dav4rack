@@ -81,12 +81,15 @@ module DAV4Rack
       507 => 'Insufficient Storage'
     }
 
+    StatusClasses = { }
+
     StatusMessage.each do |code, reason_phrase|
       klass = Class.new(Status)
       klass.code = code
       klass.reason_phrase = reason_phrase
       klass_name = reason_phrase.gsub(/[ \-]/,'')
       const_set(klass_name, klass)
+      StatusClasses[code] = klass
     end
 
   end

@@ -73,11 +73,15 @@ module DAV4Rack
           response.body << line
         end
         response['Content-Length'] = response.body.bytesize.to_s
+        OK
       else
-        file = Rack::File.new(root)
-        response.body = file
+        status, headers, body = Rack::File.new(root).call(request.env)
+        headers.each do |k, v|
+          response[k] = v
+        end
+        response.body = body
+        StatusClasses[status]
       end
-      OK
     end
 
     # HTTP PUT request.
@@ -113,7 +117,8 @@ module DAV4Rack
     #
     # Copy this resource to given destination resource.
     # Copy this resource to given destination resource.
-    def copy(dest, overwrite)
+    def copy(dest, overwrite, depth = nil)
+      return NotImplemented if depth == 0
       if(collection?)
         if(dest.exist?)
           if(dest.collection? && overwrite)

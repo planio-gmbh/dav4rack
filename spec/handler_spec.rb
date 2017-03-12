@@ -33,7 +33,7 @@ describe DAV4Rack::Handler do
   def render(root_type)
     raise ArgumentError.new 'Expecting block' unless block_given?
     doc = Nokogiri::XML::Builder.new do |xml_base|
-      xml_base.send(root_type.to_s, 'xmlns:D' => 'D:') do
+      xml_base.send(root_type.to_s, 'xmlns:D' => 'DAV:') do
         xml_base.parent.namespace = xml_base.parent.namespace_definitions.first
         xml = xml_base['D']
         yield xml
@@ -180,8 +180,7 @@ describe DAV4Rack::Handler do
 
   it 'should copy a collection' do
     mkcol('/folder').should be_created
-    copy('/folder', 'HTTP_DESTINATION' => '/copy')
-    multi_status_created.should eq true
+    copy('/folder', 'HTTP_DESTINATION' => '/copy').should be_created
     propfind('/copy', :input => propfind_xml(:resourcetype))
     multistatus_response('/D:propstat/D:prop/D:resourcetype/D:collection').should_not be_empty
   end
@@ -191,8 +190,7 @@ describe DAV4Rack::Handler do
     put('/folder/a', :input => 'A').should be_created
     put('/folder/b', :input => 'B').should be_created
 
-    copy('/folder', 'HTTP_DESTINATION' => '/copy')
-    multi_status_created.should eq true
+    copy('/folder', 'HTTP_DESTINATION' => '/copy').should be_created
     propfind('/copy', :input => propfind_xml(:resourcetype))
     multistatus_response('/D:propstat/D:prop/D:resourcetype/D:collection').should_not be_empty
     get('/copy/a').body.should == 'A'
@@ -204,8 +202,7 @@ describe DAV4Rack::Handler do
     put('/folder/a', :input => 'A').should be_created
     put('/folder/b', :input => 'B').should be_created
 
-    move('/folder', 'HTTP_DESTINATION' => '/move')
-    multi_status_created.should eq true
+    move('/folder', 'HTTP_DESTINATION' => '/move').should be_created
     propfind('/move', :input => propfind_xml(:resourcetype))
     multistatus_response('/D:propstat/D:prop/D:resourcetype/D:collection').should_not be_empty
 
@@ -280,6 +277,7 @@ describe DAV4Rack::Handler do
     match['/D:timeout'].should_not be_empty
     match['/D:locktoken'].should_not be_empty
     match['/D:owner'].should_not be_empty
+
   end
 
   context "when mapping a path" do
