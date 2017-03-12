@@ -1,10 +1,4 @@
-$:.unshift(File.expand_path(File.dirname(__FILE__) + '/../lib'))
-
-require 'rubygems'
-require 'dav4rack'
-require 'fileutils'
-require 'nokogiri'
-require 'rspec'
+require_relative 'spec_helper'
 
 describe DAV4Rack::Handler do
   DOC_ROOT = File.expand_path(File.dirname(__FILE__) + '/htdocs')
