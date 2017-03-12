@@ -1,3 +1,4 @@
+callgrind.html
 .*
 !.gitignore
 *.gem
@@ -5,3 +6,4 @@
 doc/*
 pkg/*
 test/repo
+Gemfile.lock
