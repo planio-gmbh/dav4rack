@@ -1,8 +1,11 @@
 module DAV4Rack
   module XmlElements
 
-    DAV_NAMESPACE = 'DAV:'
-    DAV_NAMESPACE_NAME = 'D'
+    DAV_NAMESPACE      = 'DAV:'.freeze
+    DAV_NAMESPACE_NAME = 'D'.freeze
+    DAV_XML_NS         = 'xmlns:D'.freeze
+
+    XML_VERSION = '1.0'.freeze
 
     %w(
       activelock

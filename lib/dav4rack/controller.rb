@@ -9,6 +9,8 @@ module DAV4Rack
     include DAV4Rack::Utils
     include DAV4Rack::XmlElements
 
+    XML_CONTENT_TYPE = 'application/xml; charset=utf-8'.freeze
+
     attr_reader :request, :response, :resource
 
 
@@ -398,7 +400,7 @@ module DAV4Rack
 
     # Overwrite is allowed
     def overwrite
-      env['HTTP_OVERWRITE'].to_s.upcase != 'F'
+      env['HTTP_OVERWRITE'].to_s.upcase != 'F'.freeze
     end
 
     # XML parsed request
@@ -410,7 +412,7 @@ module DAV4Rack
 
     # Namespace being used within XML document
     # TODO: Make this better
-    def ns(wanted_uri="DAV:")
+    def ns(wanted_uri=DAV_NAMESPACE)
       _ns = ''
       if(request_document && request_document.root && request_document.root.namespace_definitions.size > 0)
         _ns = request_document.root.namespace_definitions.collect{|__ns| __ns if __ns.href == wanted_uri}.compact
@@ -430,9 +432,9 @@ module DAV4Rack
     def render_xml(root_type)
       raise ArgumentError.new 'Expecting block' unless block_given?
       doc = Nokogiri::XML::Builder.new do |xml_base|
-        xml_base.send(root_type.to_s, {'xmlns:D' => 'DAV:'}.merge(resource.root_xml_attributes)) do
+        xml_base.send(root_type.to_s, {DAV_XML_NS => DAV_NAMESPACE}.merge(resource.root_xml_attributes)) do
           xml_base.parent.namespace = xml_base.parent.namespace_definitions.first
-          xml = xml_base['D']
+          xml = xml_base[DAV_NAMESPACE_NAME]
           yield xml
         end
       end
@@ -444,8 +446,8 @@ module DAV4Rack
           :save_with => Nokogiri::XML::Node::SaveOptions::AS_XML
         )
       end
-      response["Content-Type"] = 'application/xml; charset=utf-8'
-      response["Content-Length"] = response.body.size.to_s
+      response['Content-Type'] = XML_CONTENT_TYPE
+      response['Content-Length'] = response.body.size.to_s
     end
 
     def render_ox_xml(xml_body)
@@ -453,14 +455,15 @@ module DAV4Rack
         xml_body["xmlns:#{prefix}"] = href
       end
 
-      xml_doc = Ox::Document.new(:version => '1.0')
+      xml_doc = Ox::Document.new(version: XML_VERSION)
       xml_doc << xml_body
 
       response.body = Ox.dump(xml_doc, {indent: -1, with_xml: true})
 
-      response["Content-Type"] = 'application/xml; charset=utf-8'
-      response["Content-Length"] = response.body.size.to_s
+      response['Content-Type'] = XML_CONTENT_TYPE
+      response['Content-Length'] = response.body.size.to_s
     end
+
 
     # block:: block
     # Creates a multistatus response using #render_xml and
