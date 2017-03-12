@@ -1,14 +1,16 @@
 require 'uri'
+require 'dav4rack/http_status'
+require 'dav4rack/xml_elements'
 
 module DAV4Rack
 
   class Controller
     include DAV4Rack::HTTPStatus
     include DAV4Rack::Utils
+    include DAV4Rack::XmlElements
 
     attr_reader :request, :response, :resource
 
-    D_MULTISTATUS = "#{::DAV4Rack::Resource::DAV_NAMESPACE_NAME}:multistatus".freeze
 
     # request:: Rack::Request
     # response:: Rack::Response
@@ -39,7 +41,13 @@ module DAV4Rack
 
     def add_dav_header
       unless(response['Dav'])
-        dav_support = %w(1 2) + @dav_extensions
+        dav_support = %w(1)
+        # compliance is resource specific, only advertise 2 (locking) if
+        # supported on the resource
+        if resource.supports_locking?
+          dav_support << '2'
+        end
+        dav_support += @dav_extensions
         response['Dav'] = dav_support.join(', ')
       end
     end
@@ -59,7 +67,7 @@ module DAV4Rack
         response['Content-Type'] = resource.content_type
         response['Content-Length'] = resource.content_length.to_s
         response['Last-Modified'] = resource.last_modified.httpdate
-        res = resource.head(request, response)
+        resource.head(request, response)
         OK
       else
         NotFound
@@ -264,32 +272,23 @@ module DAV4Rack
         asked[:scope] = lockinfo.xpath("//#{ns}lockscope").children.find_all{|n|n.element?}.map{|n|n.name}.first
         asked[:type] = lockinfo.xpath("#{ns}locktype").children.find_all{|n|n.element?}.map{|n|n.name}.first
         asked[:owner] = lockinfo.xpath("//#{ns}owner/#{ns}href").children.map{|n|n.text}.first
+
         begin
           lock_time, locktoken = resource.lock(asked)
-          render_xml(:prop) do |xml|
-            xml.lockdiscovery do
-              xml.activelock do
-                if(asked[:scope])
-                  xml.lockscope do
-                    xml.send(asked[:scope])
-                  end
-                end
-                if(asked[:type])
-                  xml.locktype do
-                    xml.send(asked[:type])
-                  end
-                end
-                xml.depth asked[:depth].to_s
-                xml.timeout lock_time ? "Second-#{lock_time}" : 'infinity'
-                xml.locktoken do
-                  xml.href locktoken
-                end
-                if(asked[:owner])
-                  xml.owner asked[:owner]
-                end
-              end
-            end
-          end
+
+          lockdiscovery = ox_element(
+            D_LOCKDISCOVERY,
+            ox_activelock(
+              time: lock_time,
+              token: locktoken,
+              depth: asked[:depth].to_s,
+              scope: asked[:scope],
+              type: asked[:type],
+              owner: asked[:owner]
+            )
+          )
+          render_ox_xml(ox_element(D_PROP, lockdiscovery))
+
           response.headers['Lock-Token'] = "<#{locktoken}>"
           response.status = resource.exist? ? OK : Created
         rescue LockFailure => e

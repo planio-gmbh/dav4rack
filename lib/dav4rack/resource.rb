@@ -1,6 +1,7 @@
 require 'uuidtools'
 require 'dav4rack/http_status'
 require 'dav4rack/lock_store'
+require 'dav4rack/xml_elements'
 
 module DAV4Rack
 
@@ -18,9 +19,7 @@ module DAV4Rack
 
   class Resource
     include DAV4Rack::Utils
-
-    DAV_NAMESPACE = 'DAV:'
-    DAV_NAMESPACE_NAME = 'D'
+    include DAV4Rack::XmlElements
 
     attr_reader :path, :options, :public_path, :request,
       :response, :propstat_relative_path, :root_xml_attributes, :namespaces
@@ -95,6 +94,12 @@ module DAV4Rack
       false #true
     end
 
+    # Returns supported lock types (an array of [lockscope, locktype] pairs)
+    # i.e. [%w(D:exclusive D:write)]
+    def supported_locks
+      []
+    end
+
     # If this is a collection, return the child resources.
     def children
       NotImplemented
@@ -162,6 +167,10 @@ module DAV4Rack
     # Write the content of the resource to the response.body.
     def get(request, response)
       NotImplemented
+    end
+
+    def head(request, response)
+       #no-op, but called by the controller
     end
 
     # HTTP PUT request.
@@ -316,10 +325,15 @@ module DAV4Rack
     end
 
     # Available properties
+    DAV_PROPERTIES = %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength).map{|p| p.freeze}.freeze
+    LOCK_PROPERTIES = %w(supportedlock lockdiscovery).map{|p| p.freeze}.freeze
+
     def properties
-      %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength).collect do |prop|
-        {:name => prop, :ns_href => DAV_NAMESPACE}
+      props = DAV_PROPERTIES
+      if supports_locking?
+        props += LOCK_PROPERTIES
       end
+      props.map { |prop| { name: prop, ns_href: DAV_NAMESPACE } }
     end
 
     # name:: String - Property name
@@ -334,6 +348,8 @@ module DAV4Rack
       when 'getcontenttype'   then content_type
       when 'getetag'          then etag
       when 'getlastmodified'  then last_modified.httpdate
+      when 'supportedlock'    then supported_locks_xml
+      when 'lockdiscovery'    then lockdiscovery_xml
       else                    NotImplemented
       end
     end
@@ -425,22 +441,45 @@ module DAV4Rack
       Ox.dump(partial_document, {indent: -1})
     end
 
-    D_RESPONSE = "#{DAV_NAMESPACE_NAME}:response".freeze
-    D_HREF     = "#{DAV_NAMESPACE_NAME}:href".freeze
+    def href
+      @href ||= if propstat_relative_path
+        url_format
+      else
+        "#{request.scheme}://#{request.host}:#{request.port}#{url_format}"
+      end
+    end
 
     def properties_xml(process_properties)
       response = Ox::Element.new(D_RESPONSE)
-
-      unless(propstat_relative_path)
-        response << (Ox::Element.new(D_HREF) << "#{request.scheme}://#{request.host}:#{request.port}#{url_format}")
-      else
-        response << (Ox::Element.new(D_HREF) << url_format)
-      end
+      response << ox_element(D_HREF, href)
 
       process_properties.each do |type, properties|
         propstats(response, self.send("#{type}_properties_with_status",properties))
       end
       response
+    end
+
+    def supported_locks_xml
+      supported_locks.map do |scope, type|
+        ox_lockentry scope, type
+      end
+    end
+
+    # array of lock info hashes
+    # required keys are :time, :token, :depth
+    # other valid keys are :scope, :type, :root and :owner
+    def lockdiscovery
+      []
+    end
+
+    # returns an array of activelock ox elements
+    def lockdiscovery_xml
+      if supports_locking?
+        lockdiscovery.map do |lock|
+          lock[:root] ||= ox_element(D_HREF, href)
+          ox_activelock(**lock)
+        end
+      end
     end
 
     def get_properties_with_status(properties)
@@ -493,13 +532,10 @@ module DAV4Rack
       end
     end
 
-    # xml:: Nokogiri::XML::Builder
+
+    # response:: parent Ox::Element
     # stats:: Array of stats
     # Build propstats response
-    D_PROPSTAT = "#{DAV_NAMESPACE_NAME}:propstat".freeze
-    D_PROP     = "#{DAV_NAMESPACE_NAME}:prop".freeze
-    D_STATUS   = "#{DAV_NAMESPACE_NAME}:status".freeze
-
     def propstats(response, stats)
       return if stats.empty?
       stats.each do |status, props|
@@ -507,24 +543,24 @@ module DAV4Rack
         prop = Ox::Element.new(D_PROP)
 
         props.each do |element, value|
+
           unless prefix = namespaces[element[:ns_href]]
             prefix = add_namespace element[:ns_href]
           end
-          if(value.is_a?(Symbol))
-            prop << (Ox::Element.new("#{prefix}:#{element[:name]}") << Ox::Element.new("#{prefix}:#{value}"))
-          else
-            prop_element = Ox::Element.new("#{prefix}:#{element[:name]}")
-            prop_element << value.to_s if value
-            prop << prop_element
-          end
+
+          prop_element = Ox::Element.new("#{prefix}:#{element[:name]}")
+          ox_append prop_element, value, prefix: prefix
+          prop << prop_element
+
         end
 
         propstat << prop
-        propstat << (Ox::Element.new(D_STATUS) << "#{http_version} #{status.status_line}")
+        propstat << ox_element(D_STATUS, "#{http_version} #{status.status_line}")
 
         response << propstat
       end
     end
+
 
     # s:: string
     # Escape URL string
