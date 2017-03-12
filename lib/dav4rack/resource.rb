@@ -442,10 +442,14 @@ module DAV4Rack
     end
 
     def href
-      @href ||= if propstat_relative_path
-        url_format
+      @href ||= build_href(public_path)
+    end
+
+    def build_href(path)
+      if propstat_relative_path
+        url_format path
       else
-        "#{request.scheme}://#{request.host}:#{request.port}#{url_format}"
+        "#{request.scheme}://#{request.host}:#{request.port}#{url_format path}"
       end
     end
 
@@ -476,7 +480,10 @@ module DAV4Rack
     def lockdiscovery_xml
       if supports_locking?
         lockdiscovery.map do |lock|
-          lock[:root] ||= ox_element(D_HREF, href)
+          lock[:token] = ox_element(D_HREF, lock[:token])
+          if root = lock[:root]
+            lock[:root] = ox_element(D_HREF, root)
+          end
           ox_activelock(**lock)
         end
       end
@@ -564,8 +571,8 @@ module DAV4Rack
 
     # s:: string
     # Escape URL string
-    def url_format
-      ret = URI.escape(public_path)
+    def url_format(path = public_path)
+      ret = URI.escape(path)
       if collection? and ret[-1,1] != '/'
         ret += '/'
       end
