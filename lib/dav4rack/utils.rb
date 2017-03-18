@@ -10,7 +10,7 @@ module DAV4Rack
   end
 
   module Utils
-    DEFAULT_HTTP_VERSION = 'HTTP/1.0'.freeze
+    DEFAULT_HTTP_VERSION = 'HTTP/1.1'.freeze
 
     def to_element_hash(element)
       ns = element.namespace
@@ -31,7 +31,7 @@ module DAV4Rack
     end
 
     def http_version
-      env['HTTP_VERSION'] || env['SERVER_PROTOCOL'] || DEFAULT_HTTP_VERSION
+      DEFAULT_HTTP_VERSION
     end
 
     private
