@@ -57,10 +57,13 @@ module DAV4Rack
 
     # Return response to OPTIONS
     def options
-      add_dav_header
-      response['Allow'] = 'OPTIONS,HEAD,GET,PUT,POST,DELETE,PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK'
-      response['Ms-Author-Via'] = 'DAV'
-      OK
+      status = resource.options request, response
+      if(status == OK)
+        add_dav_header
+        response['Allow'] ||= 'OPTIONS,HEAD,GET,PUT,POST,DELETE,PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK'
+        response['Ms-Author-Via'] ||= 'DAV'
+      end
+      status
     end
 
     # Return response to HEAD

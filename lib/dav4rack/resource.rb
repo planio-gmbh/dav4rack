@@ -21,7 +21,7 @@ module DAV4Rack
     include DAV4Rack::Utils
     include DAV4Rack::XmlElements
 
-    attr_reader :path, :options, :public_path, :request,
+    attr_reader :path, :public_path, :request,
       :response, :propstat_relative_path, :root_xml_attributes, :namespaces
     attr_accessor :user
     @@blocks = {}
@@ -160,6 +160,14 @@ module DAV4Rack
     # Return the size in bytes for this resource.
     def content_length
       raise NotImplemented
+    end
+
+    # HTTP OPTIONS request.
+    # resources should override this to set the Allow header to indicate the
+    # allowed methods. By default, all WebDAV methods are advertised on all
+    # resources.
+    def options(request, response)
+      OK
     end
 
     # HTTP GET request.
@@ -384,7 +392,7 @@ module DAV4Rack
       new_path = path.dup
       new_path = new_path + '/' unless new_path[-1,1] == '/'
       new_path = '/' + new_path unless new_path[0,1] == '/'
-      self.class.new("#{new_public}#{name}", "#{new_path}#{name}", request, response, options.merge(:user => @user, :namespaces => @namespaces))
+      self.class.new("#{new_public}#{name}", "#{new_path}#{name}", request, response, @options.merge(:user => @user, :namespaces => @namespaces))
     end
 
     # Return parent of this resource
