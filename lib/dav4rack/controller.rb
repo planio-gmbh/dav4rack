@@ -25,7 +25,7 @@ module DAV4Rack
       @response = response
       @options = options
 
-      @dav_extensions = options.delete(:dav_extensions) || []
+      @dav_extensions = options.delete(:dav_extensions)
       @always_include_dav_header = options.delete(:always_include_dav_header)
 
       @resource = resource_class.new(actual_path, implied_path, @request, @response, @options)
@@ -43,15 +43,15 @@ module DAV4Rack
 
     def add_dav_header
       unless(response['Dav'])
-        dav_support = %w(1)
+        dav_support = ['1'.freeze]
         if !@always_include_dav_header || resource.supports_locking?
           # compliance is resource specific, only advertise 2 (locking) if
           # supported on the resource. If the header is only set on OPTIONS
           # responses, advertise locking anyway
-          dav_support << '2'
+          dav_support << '2'.freeze
         end
-        dav_support += @dav_extensions
-        response['Dav'] = dav_support.join(', ')
+        dav_support += @dav_extensions if @dav_extensions
+        response['Dav'] = dav_support * ', '.freeze
       end
     end
 
@@ -60,8 +60,8 @@ module DAV4Rack
       status = resource.options request, response
       if(status == OK)
         add_dav_header
-        response['Allow'] ||= 'OPTIONS,HEAD,GET,PUT,POST,DELETE,PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK'
-        response['Ms-Author-Via'] ||= 'DAV'
+        response['Allow'] ||= 'OPTIONS,HEAD,GET,PUT,POST,DELETE,PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK'.freeze
+        response['Ms-Author-Via'] ||= 'DAV'.freeze
       end
       status
     end
