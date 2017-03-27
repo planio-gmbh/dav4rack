@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 module DAV4Rack
   module XmlElements
 
-    DAV_NAMESPACE      = 'DAV:'.freeze
-    DAV_NAMESPACE_NAME = 'D'.freeze
-    DAV_XML_NS         = 'xmlns:D'.freeze
+    DAV_NAMESPACE      = 'DAV:'
+    DAV_NAMESPACE_NAME = 'D'
+    DAV_XML_NS         = 'xmlns:D'
 
-    XML_VERSION = '1.0'.freeze
+    XML_VERSION = '1.0'
 
     %w(
       activelock
@@ -25,11 +27,11 @@ module DAV4Rack
       status
       timeout
     ).each do |name|
-      const_set "D_#{name.upcase}", "#{DAV_NAMESPACE_NAME}:#{name}".freeze
+      const_set "D_#{name.upcase}", "#{DAV_NAMESPACE_NAME}:#{name}"
     end
 
-    INFINITY = 'infinity'.freeze
-    ZERO = '0'.freeze
+    INFINITY = 'infinity'
+    ZERO = '0'
 
     def ox_element(name, content = nil)
       e = Ox::Element.new(name)

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'ostruct'
 
 module DAV4Rack
@@ -10,7 +12,7 @@ module DAV4Rack
   end
 
   module Utils
-    DEFAULT_HTTP_VERSION = 'HTTP/1.1'.freeze
+    DEFAULT_HTTP_VERSION = 'HTTP/1.1'
 
     def to_element_hash(element)
       ns = element.namespace

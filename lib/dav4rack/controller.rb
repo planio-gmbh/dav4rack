@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'uri'
 require 'dav4rack/http_status'
 require 'dav4rack/xml_elements'
@@ -9,7 +11,7 @@ module DAV4Rack
     include DAV4Rack::Utils
     include DAV4Rack::XmlElements
 
-    XML_CONTENT_TYPE = 'application/xml; charset=utf-8'.freeze
+    XML_CONTENT_TYPE = 'application/xml; charset=utf-8'
 
     attr_reader :request, :response, :resource
 
@@ -43,15 +45,15 @@ module DAV4Rack
 
     def add_dav_header
       unless(response['Dav'])
-        dav_support = ['1'.freeze]
+        dav_support = ['1']
         if !@always_include_dav_header || resource.supports_locking?
           # compliance is resource specific, only advertise 2 (locking) if
           # supported on the resource. If the header is only set on OPTIONS
           # responses, advertise locking anyway
-          dav_support << '2'.freeze
+          dav_support << '2'
         end
         dav_support += @dav_extensions if @dav_extensions
-        response['Dav'] = dav_support * ', '.freeze
+        response['Dav'] = dav_support * ', '
       end
     end
 
@@ -60,8 +62,8 @@ module DAV4Rack
       status = resource.options request, response
       if(status == OK)
         add_dav_header
-        response['Allow'] ||= 'OPTIONS,HEAD,GET,PUT,POST,DELETE,PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK'.freeze
-        response['Ms-Author-Via'] ||= 'DAV'.freeze
+        response['Allow'] ||= 'OPTIONS,HEAD,GET,PUT,POST,DELETE,PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK'
+        response['Ms-Author-Via'] ||= 'DAV'
       end
       status
     end
@@ -404,7 +406,7 @@ module DAV4Rack
 
     # Overwrite is allowed
     def overwrite
-      env['HTTP_OVERWRITE'].to_s.upcase != 'F'.freeze
+      env['HTTP_OVERWRITE'].to_s.upcase != 'F'
     end
 
     # XML parsed request

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'uuidtools'
 require 'dav4rack/http_status'
 require 'dav4rack/lock_store'
@@ -332,9 +334,12 @@ module DAV4Rack
       name
     end
 
+
     # Available properties
-    DAV_PROPERTIES = %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength).map{|p| p.freeze}.freeze
-    LOCK_PROPERTIES = %w(supportedlock lockdiscovery).map{|p| p.freeze}.freeze
+    #
+    # These are returned by PROPFIND without body, or with an allprop body.
+    DAV_PROPERTIES = %w(getetag resourcetype getcontenttype getcontentlength getlastmodified creationdate displayname).freeze
+    LOCK_PROPERTIES = %w(supportedlock lockdiscovery).freeze
 
     def properties
       props = DAV_PROPERTIES
@@ -343,6 +348,7 @@ module DAV4Rack
       end
       props.map { |prop| { name: prop, ns_href: DAV_NAMESPACE } }
     end
+
 
     # name:: String - Property name
     # Returns the value of the given property
@@ -387,11 +393,11 @@ module DAV4Rack
     # NOTE:: Include trailing '/' if child is collection
     def child(name)
       new_public = public_path.dup
-      new_public = new_public + '/' unless new_public[-1,1] == '/'
-      new_public = '/' + new_public unless new_public[0,1] == '/'
+      new_public << '/'      unless new_public.end_with? '/'
+      new_public.prepend '/' unless new_public.start_with? '/'
       new_path = path.dup
-      new_path = new_path + '/' unless new_path[-1,1] == '/'
-      new_path = '/' + new_path unless new_path[0,1] == '/'
+      new_path << '/'      unless new_path.end_with? '/'
+      new_path.prepend '/' unless new_path.start_with? '/'
       self.class.new("#{new_public}#{name}", "#{new_path}#{name}", request, response, @options.merge(:user => @user, :namespaces => @namespaces))
     end
 
