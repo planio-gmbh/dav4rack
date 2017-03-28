@@ -83,7 +83,6 @@ describe DAV4Rack::Handler do
 
   it 'should fucking perform' do
     require 'ox'
-    require 'pry'
     require 'benchmark'
 
     # binding.pry

@@ -339,22 +339,24 @@ module DAV4Rack
     #
     # These are returned by PROPFIND without body, or with an allprop body.
     DAV_PROPERTIES = %w(getetag resourcetype getcontenttype getcontentlength getlastmodified creationdate displayname).freeze
-    LOCK_PROPERTIES = %w(supportedlock lockdiscovery).freeze
 
     def properties
-      props = DAV_PROPERTIES
+      props = DAV_PROPERTIES.map{|prop| { name: prop, ns_href: DAV_NAMESPACE }}
       if supports_locking?
-        props += LOCK_PROPERTIES
+        props << { name: 'supportedlock', ns_href: DAV_NAMESPACE }
       end
-      props.map { |prop| { name: prop, ns_href: DAV_NAMESPACE } }
+      props
     end
 
     # Properties to be returned for <propname/> PROPFIND
     #
-    # by default, this equals the list given by #properties (which is used to
-    # render <allprop/> responses)
+    # this should include the names of all properties defined on the resource
     def propname_properties
-      properties
+      props = self.properties
+      if supports_locking?
+        props << { name: 'lockdiscovery', ns_href: DAV_NAMESPACE }
+      end
+      props
     end
 
     # name:: String - Property name
