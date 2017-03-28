@@ -11,6 +11,13 @@ module DAV4Rack
     include WEBrick::HTTPUtils
     include DAV4Rack::Utils
 
+    def setup
+      if request.path_info and request.path_info.length > 0
+        request.path_info.force_encoding 'UTF-8'
+        request.path_info = URI.unescape request.path_info
+      end
+    end
+
     # If this is a collection, return the child resources.
     def children
       Dir[file_path + '/*'].map do |path|
