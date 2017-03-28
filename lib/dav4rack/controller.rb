@@ -27,10 +27,10 @@ module DAV4Rack
       @response = response
       @options = options
 
-      @dav_extensions = options.delete(:dav_extensions)
-      @always_include_dav_header = options.delete(:always_include_dav_header)
+      @dav_extensions = options[:dav_extensions]
+      @always_include_dav_header = options[:always_include_dav_header]
 
-      @resource = resource_class.new(actual_path, implied_path, @request, @response, @options)
+      @resource = resource_class.new(actual_path, implied_path, request, response, options)
 
       if(@always_include_dav_header)
         add_dav_header

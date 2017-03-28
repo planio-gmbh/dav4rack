@@ -26,7 +26,7 @@ module DAV4Rack
         res = nil
         begin
           controller_class = @options[:controller_class] || Controller
-          controller = controller_class.new(request, response, @options.dup)
+          controller = controller_class.new(request, response, @options)
           controller.authenticate
           res = controller.send(request.request_method.downcase)
         rescue HTTPStatus::Status => status
