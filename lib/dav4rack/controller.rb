@@ -131,6 +131,10 @@ module DAV4Rack
 
     # Return response to MKCOL
     def mkcol
+      if request.content_length.to_i > 0
+        return UnsupportedMediaType
+      end
+
       resource.lock_check if resource.supports_locking?
       status = resource.make_collection
       gen_url = "#{scheme}://#{host}:#{port}#{resource.url_format}" if status == Created
