@@ -198,6 +198,13 @@ module DAV4Rack
 
           properties = resource.properties
 
+        elsif !request_document.xpath("//#{ns}propfind/#{ns}propname").empty?
+
+          multistatus = Ox::Element.new(D_MULTISTATUS)
+          multistatus << Ox::Raw.new(resource.propnames_xml_with_depth(depth))
+          render_ox_xml(multistatus)
+          return MultiStatus
+
         else
           check = request_document.xpath("//#{ns}propfind")
           if(check && !check.empty?)

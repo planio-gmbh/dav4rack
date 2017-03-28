@@ -244,6 +244,21 @@ describe DAV4Rack::Handler do
     end
   end
 
+  it 'should find propnames' do
+    xml = render(:propfind) do |xml|
+      xml.propname
+    end
+
+    propfind('http://localhost/', :input => xml)
+
+    multistatus_response('/D:href').first.text.strip.should =~ /http:\/\/localhost(:\d+)?\//
+
+    props = %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength)
+    props.each do |prop|
+      multistatus_response("/D:propstat/D:prop/D:#{prop}").first.text.should be_empty
+    end
+  end
+
   it 'should find named properties' do
     put('/test.html', :input => '<html/>').should be_created
     propfind('/test.html', :input => propfind_xml(:getcontenttype, :getcontentlength))

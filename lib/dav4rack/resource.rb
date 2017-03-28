@@ -349,6 +349,13 @@ module DAV4Rack
       props.map { |prop| { name: prop, ns_href: DAV_NAMESPACE } }
     end
 
+    # Properties to be returned for <propname/> PROPFIND
+    #
+    # by default, this equals the list given by #properties (which is used to
+    # render <allprop/> responses)
+    def propname_properties
+      properties
+    end
 
     # name:: String - Property name
     # Returns the value of the given property
@@ -441,6 +448,12 @@ module DAV4Rack
       end
     end
 
+    def propnames_xml_with_depth(depth)
+      xml_with_depth self, depth do |element, ox_doc|
+        ox_doc << element.propnames_xml
+      end
+    end
+
     def href
       @href ||= build_href(public_path)
     end
@@ -451,6 +464,13 @@ module DAV4Rack
       else
         "#{request.scheme}://#{request.host}:#{request.port}#{url_format path}"
       end
+    end
+
+    def propnames_xml
+      response = Ox::Element.new(D_RESPONSE)
+      response << ox_element(D_HREF, href)
+      propstats response, { OK => Hash[propname_properties.map{|p| [p,nil]}] }
+      response
     end
 
     def properties_xml(process_properties)
