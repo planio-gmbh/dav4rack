@@ -230,7 +230,7 @@ module DAV4Rack
         multistatus = Ox::Element.new(D_MULTISTATUS)
 
         properties = properties.empty? ? resource.properties : properties
-        properties.map!{|property| {element: property}}
+        properties = properties.map{|property| {element: property}}
         properties = resource.propfind_add_additional_properties(properties)
 
         multistatus << Ox::Raw.new(resource.properties_xml_with_depth({:get => properties}, depth))
