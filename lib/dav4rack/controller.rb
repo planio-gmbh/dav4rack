@@ -24,6 +24,7 @@ module DAV4Rack
     def initialize(request, response, options={})
       request.path_info = ::File.expand_path(request.path_info) if request.path_info.length > 0
       @request = request
+      @request_path = request.path.force_encoding 'UTF-8'
       @response = response
       @options = options
 
@@ -379,20 +380,20 @@ module DAV4Rack
 
     # Returns Resource path with root URI removed
     def implied_path
-      clean_path(@request.path.dup)
+      clean_path(@request_path)
     end
 
     # x:: request path
     # Unescapes path and removes root URI if applicable
     def clean_path(x)
       ip = url_unescape(x)
-      ip.gsub!(/^#{Regexp.escape(root_uri_path)}/, '') if root_uri_path
+      ip.sub!(/^#{Regexp.escape(root_uri_path)}/, '') if root_uri_path
       ip
     end
 
     # Unescaped request path
     def actual_path
-      url_unescape(@request.path.dup)
+      url_unescape(@request_path)
     end
 
     # Lock token if provided by client
