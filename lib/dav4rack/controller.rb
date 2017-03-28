@@ -417,20 +417,19 @@ module DAV4Rack
     end
 
     # Namespace being used within XML document
-    # TODO: Make this better
     def ns(wanted_uri=DAV_NAMESPACE)
-      _ns = ''
-      if(request_document && request_document.root && request_document.root.namespace_definitions.size > 0)
-        _ns = request_document.root.namespace_definitions.collect{|__ns| __ns if __ns.href == wanted_uri}.compact
-        if _ns.empty?
-          _ns = request_document.root.namespace_definitions.first.prefix.to_s if _ns.empty?
-        else
-          _ns = _ns.first
-          _ns = _ns.prefix.nil? ? 'xmlns' : _ns.prefix.to_s
-        end
-        _ns += ':' unless _ns.empty?
+      if request_document and
+        request_document.root and
+        ns_defs = request_document.root.namespace_definitions and
+        ns_defs.size > 0
+
+        result = ns_defs.detect{ |nd| nd.href == wanted_uri } || ns_defs.first
+        result = result.prefix.nil? ? 'xmlns' : result.prefix.to_s
+        result += ':' unless result.empty?
+        result
+      else
+        ''
       end
-      _ns
     end
 
     # root_type:: Root tag name
