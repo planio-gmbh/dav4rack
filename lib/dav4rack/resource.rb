@@ -436,23 +436,9 @@ module DAV4Rack
     end
 
     def properties_xml_with_depth(process_properties, depth)
-      partial_document = Ox::Document.new()
-
-      partial_document << self.properties_xml(process_properties)
-
-      case depth
-      when 0
-      when 1
-        self.children.each do |resource|
-          partial_document << resource.properties_xml(process_properties)
-        end
-      else
-        self.descendants.each do |resource|
-          partial_document << resource.properties_xml(process_properties)
-        end
+      xml_with_depth self, depth do |element, ox_doc|
+        ox_doc << element.properties_xml(process_properties)
       end
-
-      Ox.dump(partial_document, {indent: -1})
     end
 
     def href

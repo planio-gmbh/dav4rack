@@ -86,5 +86,28 @@ module DAV4Rack
 
     end
 
+    # block is called for each element (at least self, depending on depth also
+    # with children / further descendants)
+    def xml_with_depth(resource, depth, &block)
+      partial_document = Ox::Document.new()
+
+      yield resource, partial_document
+
+      case depth
+      when 0
+      when 1
+        resource.children.each do |child|
+          yield child, partial_document
+        end
+      else
+        resource.descendants.each do |desc|
+          yield desc, partial_document
+        end
+      end
+
+      Ox.dump(partial_document, {indent: -1})
+    end
+
+
   end
 end
