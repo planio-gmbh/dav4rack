@@ -88,8 +88,16 @@ module DAV4Rack
       @max_timeout = options[:max_timeout] || 86400
       @default_timeout = options[:default_timeout] || 60
       @user = @options[:user] || request.ip
-      setup if respond_to?(:setup)
+
+      setup
     end
+
+
+    # override in child classes for custom setup
+    def setup
+    end
+    private :setup
+
 
     # Returns if resource supports locking
     def supports_locking?
