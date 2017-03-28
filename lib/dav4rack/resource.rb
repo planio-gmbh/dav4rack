@@ -559,6 +559,11 @@ module DAV4Rack
       end
     end
 
+    # returns the prefix for the given namespace, adding it if necessary
+    def prefix_for(ns_href)
+      namespaces[ns_href] || add_namespace(ns_href)
+    end
+
 
     # response:: parent Ox::Element
     # stats:: Array of stats
@@ -571,9 +576,7 @@ module DAV4Rack
 
         props.each do |element, value|
 
-          unless prefix = namespaces[element[:ns_href]]
-            prefix = add_namespace element[:ns_href]
-          end
+          prefix = prefix_for element[:ns_href]
 
           prop_element = Ox::Element.new("#{prefix}:#{element[:name]}")
           ox_append prop_element, value, prefix: prefix
