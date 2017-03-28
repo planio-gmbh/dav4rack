@@ -23,8 +23,9 @@ master branch includes improvements and fixes done by @djgraham and
 @tim-vandecasteele in their respective forks on Github.
 
 It also incorporates various fixes that were made as part of the redmine_dmsf
-plugin (branch dmsf-fixes), as well as improvements done by ourselves during
-development of an upcoming redmine document management plugin (branch redmine-storage).
+plugin (branch dmsf-fixes, also merged to master), as well as improvements done
+by ourselves during development of an upcoming redmine document management
+plugin.
 
 
 == Install
