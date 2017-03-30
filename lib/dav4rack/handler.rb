@@ -28,7 +28,9 @@ module DAV4Rack
           controller_class = @options[:controller_class] || Controller
           controller = controller_class.new(request, response, @options)
           controller.authenticate
-          res = controller.send(request.request_method.downcase)
+
+          method = request.request_method.downcase
+          res = controller.respond_to?(:process) ? controller.process(method) : controller.send(method)
         rescue HTTPStatus::Status => status
           res = status
         ensure
