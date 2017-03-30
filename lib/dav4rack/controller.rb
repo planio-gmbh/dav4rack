@@ -196,10 +196,9 @@ module DAV4Rack
       unless(resource.exist?)
         NotFound
       else
-        if request_document.xpath("//#{ns}propfind").empty? or
-          !request_document.xpath("//#{ns}propfind/#{ns}allprop").empty? or
-          (request.content_length == '0') or
-          (request.content_length.nil?)
+        if request.content_length.to_i == 0 or
+          request_document.xpath("//#{ns}propfind").empty? or
+          !request_document.xpath("//#{ns}propfind/#{ns}allprop").empty?
 
           properties = resource.properties
 
@@ -249,32 +248,28 @@ module DAV4Rack
 
     # Return response to PROPPATCH
     def proppatch
-      unless(resource.exist?)
-        NotFound
-      else
-        resource.lock_check if resource.supports_locking?
-        properties = {}
-        request_document.xpath("/#{ns}propertyupdate").children.each do |element|
-          case element.name
-          when 'set', 'remove'
-            prp = element.children.detect{|e|e.name == 'prop'}
-            if(prp)
-              prp.children.each do |elm|
-                next if elm.name == 'text'
-                properties[element.name] ||= []
-                properties[element.name] << {:element => to_element_hash(elm), :value => elm.text}
-              end
+      return NotFound   unless resource.exist?
+      return BadRequest unless request_document
+
+      resource.lock_check if resource.supports_locking?
+      properties = {}
+      request_document.xpath("/#{ns}propertyupdate").children.each do |element|
+        action = element.name
+        if action == 'set' || action == 'remove'
+          properties[action] ||= []
+          if prp = element.children.detect{|e|e.name == 'prop'}
+            prp.children.each do |elm|
+              next if elm.name == 'text'
+              properties[action] << { element: to_element_hash(elm), value: elm.text }
             end
           end
         end
-
-        multistatus = Ox::Element.new(D_MULTISTATUS)
-
-        multistatus << Ox::Raw.new(resource.properties_xml_with_depth(properties, depth))
-
-        render_ox_xml(multistatus)
-        MultiStatus
       end
+
+      multistatus = Ox::Element.new(D_MULTISTATUS)
+      multistatus << Ox::Raw.new(resource.properties_xml_with_depth(properties, depth))
+      render_ox_xml(multistatus)
+      MultiStatus
     end
 
 
@@ -282,42 +277,48 @@ module DAV4Rack
     # NOTE: This will pass an argument hash to Resource#lock and
     # wait for a success/failure response.
     def lock
-      lockinfo = request_document.xpath("//#{ns}lockinfo")
-      asked = {}
-      asked[:timeout] = request.env['Timeout'].split(',').map{|x|x.strip} if request.env['Timeout']
-      asked[:depth] = depth
-      unless([0, :infinity].include?(asked[:depth]))
-        BadRequest
-      else
+      return BadRequest unless depth == 0 || depth == :infinity
+
+      asked = { depth: depth }
+
+      if timeout = request.env['Timeout']
+        asked[:timeout] = timeout.split(',').map{|x|x.strip}
+      end
+
+      if request_document and
+        lockinfo = request_document.xpath("//#{ns}lockinfo")
+
         asked[:scope] = lockinfo.xpath("//#{ns}lockscope").children.find_all{|n|n.element?}.map{|n|n.name}.first
         asked[:type] = lockinfo.xpath("#{ns}locktype").children.find_all{|n|n.element?}.map{|n|n.name}.first
         asked[:owner] = lockinfo.xpath("//#{ns}owner/#{ns}href").children.map{|n|n.text}.first
+      end
 
-        begin
-          lock_time, locktoken = resource.lock(asked)
+      begin
 
-          lockdiscovery = ox_element(
-            D_LOCKDISCOVERY,
-            ox_activelock(
-              time: lock_time,
-              token: locktoken,
-              depth: asked[:depth].to_s,
-              scope: asked[:scope],
-              type: asked[:type],
-              owner: asked[:owner]
-            )
+        lock_time, locktoken = resource.lock(asked)
+
+        lockdiscovery = ox_element(
+          D_LOCKDISCOVERY,
+          ox_activelock(
+            time: lock_time,
+            token: locktoken,
+            depth: asked[:depth].to_s,
+            scope: asked[:scope],
+            type: asked[:type],
+            owner: asked[:owner]
           )
-          render_ox_xml(ox_element(D_PROP, lockdiscovery))
+        )
+        render_ox_xml(ox_element(D_PROP, lockdiscovery))
 
-          response.headers['Lock-Token'] = "<#{locktoken}>"
-          response.status = resource.exist? ? OK : Created
-        rescue LockFailure => e
-          multistatus do |xml|
-            e.path_status.each_pair do |path, status|
-              xml.response do
-                xml.href path
-                xml.status "#{http_version} #{status.status_line}"
-              end
+        response.headers['Lock-Token'] = "<#{locktoken}>"
+        response.status = resource.exist? ? OK : Created
+
+      rescue LockFailure => e
+        multistatus do |xml|
+          e.path_status.each_pair do |path, status|
+            xml.response do
+              xml.href path
+              xml.status "#{http_version} #{status.status_line}"
             end
           end
         end
@@ -407,13 +408,13 @@ module DAV4Rack
 
     # Requested depth
     def depth
-      d = env['HTTP_DEPTH']
-      if(d =~ /^\d+$/)
-        d = d.to_i
-      else
-        d = :infinity
+      @http_depth ||= begin
+        if d = env['HTTP_DEPTH'] and d =~ /^\d+$/
+          d.to_i
+        else
+          :infinity
+        end
       end
-      d
     end
 
     # Overwrite is allowed
@@ -423,7 +424,9 @@ module DAV4Rack
 
     # XML parsed request
     def request_document
-      @request_document ||= Nokogiri.XML(request.body.read){ |config| config.strict }
+      return @request_document if @request_document
+      return nil if request.body.nil? || request.body.size == 0
+      @request_document = Nokogiri.XML(request.body.read){ |config| config.strict }
     rescue
       raise BadRequest
     end

@@ -520,10 +520,6 @@ module DAV4Rack
     def lockdiscovery_xml
       if supports_locking?
         lockdiscovery.map do |lock|
-          lock[:token] = ox_element(D_HREF, lock[:token])
-          if root = lock[:root]
-            lock[:root] = ox_element(D_HREF, root)
-          end
           ox_activelock(**lock)
         end
       end
@@ -561,7 +557,7 @@ module DAV4Rack
     def remove_properties_with_status(properties)
       stats = Hash.new { |h, k| h[k] = [] }
       properties.each do |property|
-        val = self.remove_property(property[:element], property[:value])
+        val = self.remove_property(property[:element])
         if val.is_a?(Class)
           stats[val] << property[:element]
         else
@@ -569,10 +565,14 @@ module DAV4Rack
         end
       end
       stats
+
+
+
     end
 
     # adds the given xml namespace to namespaces and returns the prefix
     def add_namespace(ns, prefix = "unknown#{rand 65536}")
+      return nil if ns.blank?
       unless namespaces.key? ns
         namespaces[ns] = prefix
         return prefix
@@ -596,9 +596,12 @@ module DAV4Rack
 
         props.each do |element, value|
 
-          prefix = prefix_for element[:ns_href]
+          name = element[:name]
+          if prefix = prefix_for(element[:ns_href])
+            name = "#{prefix}:#{name}"
+          end
 
-          prop_element = Ox::Element.new("#{prefix}:#{element[:name]}")
+          prop_element = Ox::Element.new(name)
           ox_append prop_element, value, prefix: prefix
           prop << prop_element
 

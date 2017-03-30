@@ -75,11 +75,16 @@ module DAV4Rack
         activelock << ox_element(D_DEPTH, depth)
         activelock << ox_element(D_TIMEOUT,
                                  (time ? "Second-#{time}" : INFINITY))
+
+        token = ox_element(D_HREF, token)
         activelock << ox_element(D_LOCKTOKEN, token)
+
         if owner
           activelock << ox_element(D_OWNER, owner)
         end
+
         if root
+          root = ox_element(D_HREF, root)
           activelock << ox_element(D_LOCKROOT, root)
         end
       end
