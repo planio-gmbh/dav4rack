@@ -4,8 +4,8 @@ module DAV4Rack
   module XmlElements
 
     DAV_NAMESPACE      = 'DAV:'
-    DAV_NAMESPACE_NAME = 'D'
-    DAV_XML_NS         = 'xmlns:D'
+    DAV_NAMESPACE_NAME = 'd'
+    DAV_XML_NS         = 'xmlns:d'
 
     XML_VERSION = '1.0'
 
