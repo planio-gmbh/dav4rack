@@ -52,23 +52,23 @@ describe DAV4Rack::Handler do
 
   def multistatus_response(pattern)
     @response.should be_multi_status
-    response_xml.xpath('//D:multistatus/D:response', response_xml.root.namespaces).should_not be_empty
-    response_xml.xpath("//D:multistatus/D:response#{pattern}", response_xml.root.namespaces)
+    response_xml.xpath('//d:multistatus/d:response', response_xml.root.namespaces).should_not be_empty
+    response_xml.xpath("//d:multistatus/d:response#{pattern}", response_xml.root.namespaces)
   end
 
   def multi_status_created
-    response_xml.xpath('//D:multistatus/D:response/D:status').should_not be_empty
-    response_xml.xpath('//D:multistatus/D:response/D:status').text.should =~ /Created/
+    response_xml.xpath('//d:multistatus/d:response/d:status').should_not be_empty
+    response_xml.xpath('//d:multistatus/d:response/d:status').text.should =~ /Created/
   end
 
   def multi_status_ok
-    response_xml.xpath('//D:multistatus/D:response/D:status').should_not be_empty
-    response_xml.xpath('//D:multistatus/D:response/D:status').text.should =~ /OK/
+    response_xml.xpath('//d:multistatus/d:response/d:status').should_not be_empty
+    response_xml.xpath('//d:multistatus/d:response/d:status').text.should =~ /OK/
   end
 
   def multi_status_no_content
-    response_xml.xpath('//D:multistatus/D:response/D:status').should_not be_empty
-    response_xml.xpath('//D:multistatus/D:response/D:status').text.should =~ /No Content/
+    response_xml.xpath('//d:multistatus/d:response/d:status').should_not be_empty
+    response_xml.xpath('//d:multistatus/d:response/d:status').text.should =~ /No Content/
   end
 
   def propfind_xml(*props)
@@ -182,7 +182,7 @@ describe DAV4Rack::Handler do
     mkcol('/folder').should be_created
     copy('/folder', 'HTTP_DESTINATION' => '/copy').should be_created
     propfind('/copy', :input => propfind_xml(:resourcetype))
-    multistatus_response('/D:propstat/D:prop/D:resourcetype/D:collection').should_not be_empty
+    multistatus_response('/d:propstat/d:prop/d:resourcetype/d:collection').should_not be_empty
   end
 
   it 'should copy a collection resursively' do
@@ -192,7 +192,7 @@ describe DAV4Rack::Handler do
 
     copy('/folder', 'HTTP_DESTINATION' => '/copy').should be_created
     propfind('/copy', :input => propfind_xml(:resourcetype))
-    multistatus_response('/D:propstat/D:prop/D:resourcetype/D:collection').should_not be_empty
+    multistatus_response('/d:propstat/d:prop/d:resourcetype/d:collection').should_not be_empty
     get('/copy/a').body.should == 'A'
     get('/copy/b').body.should == 'B'
   end
@@ -204,7 +204,7 @@ describe DAV4Rack::Handler do
 
     move('/folder', 'HTTP_DESTINATION' => '/move').should be_created
     propfind('/move', :input => propfind_xml(:resourcetype))
-    multistatus_response('/D:propstat/D:prop/D:resourcetype/D:collection').should_not be_empty
+    multistatus_response('/d:propstat/d:prop/d:resourcetype/d:collection').should_not be_empty
 
     get('/move/a').body.should == 'A'
     get('/move/b').body.should == 'B'
@@ -215,14 +215,14 @@ describe DAV4Rack::Handler do
   it 'should create a collection' do
     mkcol('/folder').should be_created
     propfind('/folder', :input => propfind_xml(:resourcetype))
-    multistatus_response('/D:propstat/D:prop/D:resourcetype/D:collection').should_not be_empty
+    multistatus_response('/d:propstat/d:prop/d:resourcetype/d:collection').should_not be_empty
   end
 
   it 'should return full urls after creating a collection' do
     mkcol('/folder').should be_created
     propfind('/folder', :input => propfind_xml(:resourcetype))
-    multistatus_response('/D:propstat/D:prop/D:resourcetype/D:collection').should_not be_empty
-    multistatus_response('/D:href').first.text.should =~ /http:\/\/localhost(:\d+)?\/folder/
+    multistatus_response('/d:propstat/d:prop/d:resourcetype/d:collection').should_not be_empty
+    multistatus_response('/d:href').first.text.should =~ /http:\/\/localhost(:\d+)?\/folder/
   end
 
   it 'should not find properties for nonexistent resources' do
@@ -236,11 +236,11 @@ describe DAV4Rack::Handler do
 
     propfind('http://localhost/', :input => xml)
 
-    multistatus_response('/D:href').first.text.strip.should =~ /http:\/\/localhost(:\d+)?\//
+    multistatus_response('/d:href').first.text.strip.should =~ /http:\/\/localhost(:\d+)?\//
 
     props = %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength)
     props.each do |prop|
-      multistatus_response("/D:propstat/D:prop/D:#{prop}").should_not be_empty
+      multistatus_response("/d:propstat/d:prop/d:#{prop}").should_not be_empty
     end
   end
 
@@ -251,11 +251,11 @@ describe DAV4Rack::Handler do
 
     propfind('http://localhost/', :input => xml)
 
-    multistatus_response('/D:href').first.text.strip.should =~ /http:\/\/localhost(:\d+)?\//
+    multistatus_response('/d:href').first.text.strip.should =~ /http:\/\/localhost(:\d+)?\//
 
     props = %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength)
     props.each do |prop|
-      multistatus_response("/D:propstat/D:prop/D:#{prop}").first.text.should be_empty
+      multistatus_response("/d:propstat/d:prop/d:#{prop}").first.text.should be_empty
     end
   end
 
@@ -263,8 +263,8 @@ describe DAV4Rack::Handler do
     put('/test.html', :input => '<html/>').should be_created
     propfind('/test.html', :input => propfind_xml(:getcontenttype, :getcontentlength))
 
-    multistatus_response('/D:propstat/D:prop/D:getcontenttype').first.text.should == 'text/html'
-    multistatus_response('/D:propstat/D:prop/D:getcontentlength').first.text.should == '7'
+    multistatus_response('/d:propstat/d:prop/d:getcontenttype').first.text.should == 'text/html'
+    multistatus_response('/d:propstat/d:prop/d:getcontentlength').first.text.should == '7'
   end
 
   it 'should lock a resource' do
@@ -281,17 +281,17 @@ describe DAV4Rack::Handler do
     response.should be_ok
 
     match = lambda do |pattern|
-      response_xml.xpath "/D:prop/D:lockdiscovery/D:activelock#{pattern}"
+      response_xml.xpath "/d:prop/d:lockdiscovery/d:activelock#{pattern}"
     end
 
     match[''].should_not be_empty
 
-    match['/D:locktype'].should_not be_empty
-    match['/D:lockscope'].should_not be_empty
-    match['/D:depth'].should_not be_empty
-    match['/D:timeout'].should_not be_empty
-    match['/D:locktoken'].should_not be_empty
-    match['/D:owner'].should_not be_empty
+    match['/d:locktype'].should_not be_empty
+    match['/d:lockscope'].should_not be_empty
+    match['/d:depth'].should_not be_empty
+    match['/d:timeout'].should_not be_empty
+    match['/d:locktoken'].should_not be_empty
+    match['/d:owner'].should_not be_empty
 
   end
 
