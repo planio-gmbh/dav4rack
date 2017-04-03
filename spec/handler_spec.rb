@@ -307,4 +307,23 @@ describe DAV4Rack::Handler do
       response.headers['location'].should =~ /http:\/\/localhost(:\d+)?\/webdav\/test/
     end
   end
+
+  describe "delegating webdav request methods to the controller" do
+
+    it 'calls #process if the controller respond to' do
+      my_controller = Class.new(DAV4Rack::Controller) do
+        def process(_action)
+        end
+      end
+      @controller = described_class.new(root: DOC_ROOT, controller_class: my_controller)
+
+      expect_any_instance_of(my_controller).to receive(:process).with('head')
+      request 'head', '/'
+    end
+
+    it 'calls send otherwhise' do
+      expect_any_instance_of(DAV4Rack::Controller).to receive(:send).with('head')
+      head '/'
+    end
+  end
 end
