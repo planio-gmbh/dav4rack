@@ -1,66 +1,75 @@
+# frozen_string_literal: true
+
 require 'dav4rack/logger'
 
 module DAV4Rack
-
   class Handler
     include DAV4Rack::HTTPStatus
+
     def initialize(options={})
       @options = options.dup
+
       unless(@options[:resource_class])
         require 'dav4rack/resources/file_resource'
         @options[:resource_class] = FileResource
         @options[:root] ||= Dir.pwd
       end
+
       Logger.set(*@options[:log_to])
     end
 
     def call(env)
-      begin
-        start = Time.now
-        request = Rack::Request.new(env)
-        response = Rack::Response.new
+      start = Time.now
+      request = setup_request env
+      response = Rack::Response.new
 
-        Logger.info "Processing WebDAV request: #{request.path} (for #{request.ip} at #{Time.now}) [#{request.request_method}]"
+      Logger.info "Processing WebDAV request: #{request.path} (for #{request.ip} at #{Time.now}) [#{request.request_method}]"
 
-        controller = nil
-        res = nil
-        begin
-          controller_class = @options[:controller_class] || Controller
-          controller = controller_class.new(request, response, @options)
-          controller.authenticate
-          res = controller.send(request.request_method.downcase)
-        rescue HTTPStatus::Status => status
-          res = status
-        ensure
-          if res.respond_to?(:code)
-            response.status = res.code
-            if res.code == 401
-              response.body = controller.resource.respond_to?(:authentication_error_msg) ? controller.resource.authentication_error_msg : 'Not Authorized'
-              response['WWW-Authenticate'] = "Basic realm=\"#{controller.resource.respond_to?(:authentication_realm) ? controller.resource.authentication_realm : 'Locked content'}\""
-            end
-          end
-        end
+      controller = setup_controller request, response
+      controller.process
+      postprocess_response response
 
-        # Strings in Ruby 1.9 are no longer enumerable.  Rack still expects the response.body to be
-        # enumerable, however.
+      # Apache wants the body dealt with, so just read it and junk it
+      buf = true
+      buf = request.body.read(8192) while buf
 
-        response['Content-Length'] = response.body.to_s.length unless response['Content-Length'] || !response.body.is_a?(String)
-        response.body = [response.body] unless response.body.respond_to? :each
-        response.status = response.status ? response.status.to_i : 200
-        response.headers.keys.each{|k| response.headers[k] = response[k].to_s}
-
-        # Apache wants the body dealt with, so just read it and junk it
-        buf = true
-        buf = request.body.read(8192) while buf
-
-        Logger.debug "Response in string form. Outputting contents: \n#{response.body}" if response.body.is_a?(String)
-        Logger.info "Completed in: #{((Time.now.to_f - start.to_f) * 1000).to_i} ms | #{response.status} [#{request.url}]"
-
-        response.body.is_a?(Rack::File) ? response.body.call(env) : response.finish
-      rescue Exception => e
-        Logger.error "WebDAV Error: #{e}\n#{e.backtrace.join("\n")}"
-        raise e
+      if Logger.debug? and response.body.is_a?(String)
+        Logger.debug "Response String:\n#{response.body}"
       end
+      Logger.info "Completed in: #{((Time.now.to_f - start.to_f) * 1000).to_i} ms | #{response.status} [#{request.url}]"
+
+
+      if response.body.is_a?(Rack::File)
+        response.body.call env
+      else
+        response.finish
+      end
+
+    rescue Exception => e
+      Logger.error "WebDAV Error: #{e}\n#{e.backtrace.join("\n")}"
+      raise e
+    end
+
+
+    private
+
+
+    def postprocess_response(response)
+      if response.body.is_a?(String)
+        response['Content-Length'] ||= response.body.length.to_s
+      end
+      response.body = [response.body] unless response.body.respond_to?(:each)
+    end
+
+
+    def setup_request(env)
+      ::DAV4Rack::Request.new env, @options
+    end
+
+
+    def setup_controller(request, response)
+      controller_class = @options[:controller_class] || ::DAV4Rack::Controller
+      controller_class.new(request, response, @options)
     end
 
   end

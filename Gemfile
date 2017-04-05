@@ -1,13 +1,14 @@
 source 'https://rubygems.org'
 
+gemspec
+
 gem 'rake'
 gem 'mime-types'
 gem 'mongo'
-gem 'mongoid'
 gem 'unicorn'
+gem 'minitest'
 gem 'rspec'
-gem 'byebug'
+gem 'mocha'
+gem 'byebug', platforms: :mri
 gem 'ruby-prof'
-#gem 'ox', github: 'tim-vandecasteele/ox', branch: 'add-raw'
 
-gemspec

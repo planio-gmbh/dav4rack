@@ -8,16 +8,19 @@ module DAV4Rack
     DAV_XML_NS         = 'xmlns:d'
 
     XML_VERSION = '1.0'
+    XML_CONTENT_TYPE = 'application/xml; charset=utf-8'
 
     %w(
       activelock
       depth
+      error
       href
       lockdiscovery
       lockentry
       lockroot
       lockscope
       locktoken
+      lock-token-submitted
       locktype
       multistatus
       owner
@@ -27,7 +30,7 @@ module DAV4Rack
       status
       timeout
     ).each do |name|
-      const_set "D_#{name.upcase}", "#{DAV_NAMESPACE_NAME}:#{name}"
+      const_set "D_#{name.upcase.gsub('-', '_')}", "#{DAV_NAMESPACE_NAME}:#{name}"
     end
 
     INFINITY = 'infinity'
@@ -58,6 +61,14 @@ module DAV4Rack
       Ox::Element.new(D_LOCKENTRY).tap do |e|
         e << ox_element(D_LOCKSCOPE, Ox::Element.new(scope))
         e << ox_element(D_LOCKTYPE,  Ox::Element.new(type))
+      end
+    end
+
+    def ox_response(path, status)
+      Ox::Element.new(D_RESPONSE).tap do |e|
+        # path = "#{scheme}://#{host}:#{port}#{URI.escape(path)}"
+        e << ox_element(D_HREF, path)
+        e << ox_element(D_STATUS, "#{http_version} #{status.status_line}")
       end
     end
 

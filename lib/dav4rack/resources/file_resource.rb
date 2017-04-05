@@ -11,13 +11,6 @@ module DAV4Rack
     include WEBrick::HTTPUtils
     include DAV4Rack::Utils
 
-    def setup
-      if request.path_info and request.path_info.length > 0
-        request.path_info.force_encoding 'UTF-8'
-        request.path_info = URI.unescape request.path_info
-      end
-    end
-
     # If this is a collection, return the child resources.
     def children
       Dir[file_path + '/*'].map do |path|
@@ -115,7 +108,7 @@ module DAV4Rack
       else
         ::File.unlink(file_path)
       end
-      ::File.unlink(prop_path) if ::File.exists?(prop_path)
+      ::File.unlink(prop_path) if ::File.exist?(prop_path)
       @_prop_hash = nil
       NoContent
     end
@@ -180,7 +173,7 @@ module DAV4Rack
         if(::File.directory?(file_path))
           MethodNotAllowed
         else
-          if(::File.directory?(::File.dirname(file_path)) && !::File.exists?(file_path))
+          if(::File.directory?(::File.dirname(file_path)) && !::File.exist?(file_path))
             Dir.mkdir(file_path)
             Created
           else
@@ -283,7 +276,15 @@ module DAV4Rack
       end
     end
 
-    protected
+    def authenticate(user, pass)
+      if(@options[:username])
+        @options[:username] == user && @options[:password] == pass
+      else
+        true
+      end
+    end
+
+    private
 
     def lock_check(lock_type=nil)
       if(FileResourceLock.explicitly_locked?(@path, root))
@@ -351,14 +352,6 @@ module DAV4Rack
 
     def prop_hash
       @_prop_hash ||= IS_18 ? PStore.new(prop_path) : PStore.new(prop_path, true)
-    end
-
-    def authenticate(user, pass)
-      if(@options[:username])
-        @options[:username] == user && @options[:password] == pass
-      else
-        true
-      end
     end
 
     def root

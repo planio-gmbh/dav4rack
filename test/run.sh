@@ -1,14 +1,14 @@
 #!/bin/sh 
 
-# Run buitin spec tests
-bundle exec rake test
+# Run tests
+bundle exec rake
 
 if [ $? -ne 0 ] ; then
-  echo "*** Specs failed to properly complete"
+  echo "*** Some Tests failed"
   exit 1
 fi
 
-echo "*** Specs passed. Starting litmus"
+echo "*** Tests passed. Starting litmus"
 echo
 
 # Ensure fresh store directory

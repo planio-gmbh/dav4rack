@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'uuidtools'
-require 'dav4rack/http_status'
 require 'dav4rack/lock_store'
 require 'dav4rack/xml_elements'
 
@@ -90,6 +89,20 @@ module DAV4Rack
       @user = @options[:user] || request.ip
 
       setup
+    end
+
+    # override to implement custom authentication
+    # should return true for successful authentication, false otherwise
+    def authenticate(username, password)
+      true
+    end
+
+    def authentication_error_message
+      'Not Authorized'
+    end
+
+    def authentication_realm
+      'Locked content'
     end
 
 
@@ -565,9 +578,6 @@ module DAV4Rack
         end
       end
       stats
-
-
-
     end
 
     # adds the given xml namespace to namespaces and returns the prefix
@@ -615,29 +625,13 @@ module DAV4Rack
     end
 
 
-    # s:: string
     # Escape URL string
     def url_format(path = public_path)
-      ret = URI.escape(path)
-      if collection? and ret[-1,1] != '/'
-        ret += '/'
+      path = Addressable::URI.encode(path)
+      if collection? and !path.end_with? '/'
+        path << '/'
       end
-      # Additionally escape square brackets, otherwise files with
-      # file names like file[1].pdf are not visible in some WebDAV clients
-      URI.escape ret, '[]'
-    end
-
-    # Does client allow GET redirection
-    # TODO: Get a comprehensive list in here.
-    # TODO: Allow this to be dynamic so users can add regexes to match if they know of a client
-    # that can be supported that is not listed.
-    def allows_redirect?
-      [
-        %r{cyberduck}i,
-        %r{konqueror}i
-      ].any? do |regexp|
-        (request.respond_to?(:user_agent) ? request.user_agent : request.env['HTTP_USER_AGENT']).to_s =~ regexp
-      end
+      return path
     end
 
     def use_compat_mkcol_response?
@@ -647,16 +641,10 @@ module DAV4Rack
     # Returns true if using an MS client
     def use_ms_compat_creationdate?
       if(@options[:compat_ms_mangled_creationdate] || @options[:compat_all])
-        is_ms_client?
+        request.is_ms_client?
       end
     end
 
-    # Basic user agent testing for MS authored client
-    def is_ms_client?
-      [%r{microsoft-webdav}i, %r{microsoft office}i].any? do |regexp|
-        (request.respond_to?(:user_agent) ? request.user_agent : request.env['HTTP_USER_AGENT']).to_s =~ regexp
-      end
-    end
 
     # Callback function that adds additional properties to the propfind REQUEST
     # These properties will then be parsed and processed as though they were sent
@@ -667,19 +655,6 @@ module DAV4Rack
       properties
     end
 
-    protected
-
-    # Request environment variables
-    def env
-      @request.env
-    end
-
-    # Returns authentication credentials if available in form of [username,password]
-    # TODO: Add support for digest
-    def auth_credentials
-      auth = Rack::Auth::Basic::Request.new(request.env)
-      auth.provided? && auth.basic? ? auth.credentials : [nil,nil]
-    end
 
   end
 
