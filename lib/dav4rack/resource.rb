@@ -564,6 +564,7 @@ module DAV4Rack
       stats
     end
 
+
     # resource:: Resource
     # elements:: Property hashes (name, namespace, children)
     # Removes the given properties from a resource
@@ -580,6 +581,7 @@ module DAV4Rack
       stats
     end
 
+
     # adds the given xml namespace to namespaces and returns the prefix
     def add_namespace(ns, prefix = "unknown#{rand 65536}")
       return nil if ns.blank?
@@ -588,6 +590,7 @@ module DAV4Rack
         return prefix
       end
     end
+
 
     # returns the prefix for the given namespace, adding it if necessary
     def prefix_for(ns_href)

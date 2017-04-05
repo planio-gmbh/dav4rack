@@ -6,14 +6,17 @@ module DAV4Rack
   class Handler
     include DAV4Rack::HTTPStatus
 
+    # Options:
+    #
+    # - resource_class: your Resource implementation
+    # - controller_class: custom Controller implementation (optional).
+    # - root_uri_path: Path the handler is mapped to. Any resources
+    #   instantiated will only see the part of the path below this root.
+    # - all options are passed on to your resource implementation and are
+    #   accessible there as @options.
+    #
     def initialize(options={})
       @options = options.dup
-
-      unless(@options[:resource_class])
-        require 'dav4rack/resources/file_resource'
-        @options[:resource_class] = FileResource
-        @options[:root] ||= Dir.pwd
-      end
 
       Logger.set(*@options[:log_to])
     end
@@ -68,8 +71,11 @@ module DAV4Rack
 
 
     def setup_controller(request, response)
-      controller_class = @options[:controller_class] || ::DAV4Rack::Controller
       controller_class.new(request, response, @options)
+    end
+
+    def controller_class
+      @options[:controller_class] || ::DAV4Rack::Controller
     end
 
   end

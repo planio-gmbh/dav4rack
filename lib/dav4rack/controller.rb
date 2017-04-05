@@ -19,7 +19,8 @@ module DAV4Rack
     # response:: Rack::Response
     # options:: Options hash
     # Create a new Controller.
-    # NOTE: options will be passed to Resource
+    #
+    # options will be passed on to the resource
     def initialize(request, response, options={})
       @options = options
 
@@ -27,11 +28,13 @@ module DAV4Rack
       @response = response
 
       @dav_extensions = options[:dav_extensions]
-      @always_include_dav_header = options[:always_include_dav_header]
+
+      @always_include_dav_header = !!options[:always_include_dav_header]
+      @allow_unauthenticated_options_on_root = !!options[:allow_unauthenticated_options_on_root]
 
       setup_resource
 
-      if(@always_include_dav_header)
+      if @always_include_dav_header
         add_dav_header
       end
     end
@@ -39,7 +42,7 @@ module DAV4Rack
 
     # main entry point, called by the Handler
     def process
-      if authenticate
+      if skip_authorization? || authenticate
         status = send(request.request_method.downcase) || OK
       else
         status = HTTPStatus::Unauthorized
@@ -58,6 +61,25 @@ module DAV4Rack
 
 
     private
+
+
+    # if true, resource#authenticate will never be called
+    def skip_authorization?
+
+      # Microsoft Web Client workaround (from RedmineDmsf plugin):
+      #
+      # MS web client will not attempt any authentication (it'd seem)
+      # until it's acknowledged a completed OPTIONS request.
+      #
+      # If the request method is OPTIONS return true, controller will simply
+      # call the options method within, which accesses nothing, just returns
+      # headers about the dav env.
+      return @allow_unauthenticated_options_on_root &&
+        request.request_method.downcase == 'options' &&
+        (request.path_info == '/' || request.path_info.empty?)
+
+    end
+
 
     # Return response to OPTIONS
     def options
@@ -402,12 +424,18 @@ module DAV4Rack
 
     # Class of the resource in use
     def resource_class
+      unless @options[:resource_class]
+        require 'dav4rack/resources/file_resource'
+        @options[:resource_class] = FileResource
+        @options[:root] ||= Dir.pwd
+      end
+
       @options[:resource_class]
     end
 
 
     def add_dav_header
-      unless(response['Dav'])
+      unless response['Dav']
         dav_support = ['1']
         if !@always_include_dav_header || resource.supports_locking?
           # compliance is resource specific, only advertise 2 (locking) if
