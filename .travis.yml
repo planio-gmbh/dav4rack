@@ -1,18 +1,14 @@
 language: ruby
 rvm:
-  - ree
-  - 1.8.7
-  - 1.9.2
-  - 1.9.3
-  - jruby-19mode
-  - jruby-18mode
-  - rbx-18mode
-  - rbx-19mode
+  - 2.2.5
+  - 2.3.1
+  - 2.4.1
+  - jruby-9.1.2.0
 before_install:
   - gem update --system
   - gem --version # make sure rubygems actually were updated
-  - ./test/setup_script.sh
+  - ./test/setup_litmus.sh
 before_script:
   - rm -rf /tmp/dav-file-store
   - mkdir /tmp/dav-file-store
-script: ./test/script.sh
+script: ./test/run.sh
