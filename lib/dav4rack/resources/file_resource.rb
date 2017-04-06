@@ -66,7 +66,7 @@ module DAV4Rack
     #
     # Write the content of the resource to the response.body.
     def get(request, response)
-      raise NotFound unless exist?
+      return NotFound unless exist?
       if stat.directory?
         response.body = ""
         Rack::Directory.new(root).call(request.env)[2].each do |line|
