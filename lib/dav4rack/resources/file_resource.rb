@@ -118,42 +118,38 @@ module DAV4Rack
     # Copy this resource to given destination resource.
     # Copy this resource to given destination resource.
     def copy(dest, overwrite, depth = nil)
-      return NotImplemented if depth == 0
-      if(collection?)
-        if(dest.exist?)
-          if(dest.collection? && overwrite)
-            FileUtils.cp_r(file_path, dest.send(:file_path))
-            Created
-          else
-            if(overwrite)
-              FileUtils.rm(dest.send(:file_path))
-              FileUtils.cp_r(file_path, dest.send(:file_path))
-              NoContent
-            else
-              PreconditionFailed
-            end
-          end
-        else
-          FileUtils.cp_r(file_path, dest.send(:file_path))
-          Created
-        end
-      else
-        if(dest.exist? && !overwrite)
-          PreconditionFailed
-        else
-          if(::File.directory?(::File.dirname(dest.send(:file_path))))
-            new = !dest.exist?
-            if(dest.collection? && dest.exist?)
-              FileUtils.rm_rf(dest.send(:file_path))
-            end
-            FileUtils.cp(file_path, dest.send(:file_path).sub(/\/$/, ''))
-            FileUtils.cp(prop_path, dest.prop_path) if ::File.exist? prop_path
-            new ? Created : NoContent
-          else
-            Conflict
-          end
-        end
+
+      is_new = true
+
+      unless dest.parent.exist? and dest.parent.collection?
+        return Conflict
       end
+
+      if dest.exist?
+        if overwrite
+          FileUtils.rm_r dest.file_path, secure: true
+        else
+          return PreconditionFailed
+        end
+        is_new = false
+      end
+
+      if collection?
+
+        if request.depth == 0
+          Dir.mkdir dest.file_path
+        else
+          FileUtils.cp_r(file_path, dest.file_path)
+        end
+
+      else
+
+        FileUtils.cp(file_path, dest.file_path.sub(/\/$/, ''))
+        FileUtils.cp(prop_path, dest.prop_path) if ::File.exist? prop_path
+
+      end
+
+      is_new ? Created : NoContent
     end
 
     # HTTP MOVE request.
@@ -284,6 +280,12 @@ module DAV4Rack
       end
     end
 
+    protected
+
+    def file_path
+      ::File.expand_path ::File.join(root, path)
+    end
+
     private
 
     def lock_check(lock_type=nil)
@@ -356,10 +358,6 @@ module DAV4Rack
 
     def root
       @options[:root]
-    end
-
-    def file_path
-      ::File.join(root, path)
     end
 
     def stat
