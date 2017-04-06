@@ -5,6 +5,8 @@ require 'rack/mime'
 module DAV4Rack
   # DAV4Rack::File simply allows us to use Rack::File but with the
   # specific location we deem appropriate
+  #
+  # FIXME is that used anywhere?
   class File < Rack::File
     attr_accessor :path
 

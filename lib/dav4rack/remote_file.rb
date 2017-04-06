@@ -5,6 +5,7 @@ require 'rack/file'
 
 module DAV4Rack
   
+   #FIXME unused?
   class RemoteFile < Rack::File
     
     attr_accessor :path

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module DAV4Rack
 
   module HTTPStatus
