@@ -1,7 +1,7 @@
 #!/bin/sh 
 
 # Run tests
-bundle exec rake
+RUBYOPT=-W1 bundle exec rake
 
 if [ $? -ne 0 ] ; then
   echo "*** Some Tests failed"
