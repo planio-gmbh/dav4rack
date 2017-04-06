@@ -41,12 +41,7 @@ module DAV4Rack
       end
       Logger.info "Completed in: #{((Time.now.to_f - start.to_f) * 1000).to_i} ms | #{response.status} [#{request.url}]"
 
-
-      if response.body.is_a?(Rack::File)
-        response.body.call env
-      else
-        response.finish
-      end
+      response.finish
 
     rescue Exception => e
       Logger.error "WebDAV Error: #{e}\n#{e.backtrace.join("\n")}"
