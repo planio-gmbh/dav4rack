@@ -1,7 +1,10 @@
 # coding: utf-8
+# frozen_string_literal: true
+
 require 'mime/types'
 require 'mongo'
 require 'erb'
+require 'dav4rack/security_utils'
 
 module DAV4Rack
 
@@ -228,7 +231,15 @@ module DAV4Rack
 
     def authenticate(user, pass)
       if(@options[:username])
-        @options[:username] == user && @options[:password] == pass
+        # This comparison uses & so that it doesn't short circuit and
+        # uses `variable_size_secure_compare` so that length information
+        # isn't leaked.
+        SecurityUtils.variable_size_secure_compare(
+          user, @options[:username]
+        ) &
+          SecurityUtils.variable_size_secure_compare(
+            pass, @options[:password]
+          )
       else
         true
       end

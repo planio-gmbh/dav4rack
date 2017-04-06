@@ -1,8 +1,10 @@
 # encoding: UTF-8
+# frozen_string_literal: true
 
 require 'pstore'
 require 'webrick/httputils'
 require 'dav4rack/file_resource_lock'
+require 'dav4rack/security_utils'
 
 module DAV4Rack
 
@@ -274,7 +276,15 @@ module DAV4Rack
 
     def authenticate(user, pass)
       if(@options[:username])
-        @options[:username] == user && @options[:password] == pass
+        # This comparison uses & so that it doesn't short circuit and
+        # uses `variable_size_secure_compare` so that length information
+        # isn't leaked.
+        SecurityUtils.variable_size_secure_compare(
+          user, @options[:username]
+        ) &
+          SecurityUtils.variable_size_secure_compare(
+            pass, @options[:password]
+          )
       else
         true
       end
