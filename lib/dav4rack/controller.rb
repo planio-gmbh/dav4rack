@@ -179,7 +179,7 @@ module DAV4Rack
     # Move Resource to new location.
     def move
       return NotFound unless(resource.exist?)
-      return BadRequest unless depth == :infinity
+      return BadRequest unless request.depth == :infinity
 
       return BadRequest unless dest = request.destination
       if status = dest.validate
@@ -200,7 +200,7 @@ module DAV4Rack
     # Return response to COPY
     def copy
       return NotFound   unless(resource.exist?)
-      return BadRequest unless depth == :infinity or depth == 0
+      return BadRequest unless request.depth == :infinity or request.depth == 0
 
       return BadRequest unless dest = request.destination
       if status = dest.validate(host: request.host,
@@ -213,7 +213,7 @@ module DAV4Rack
         request, response, @options.merge(user: resource.user)
       )
 
-      resource.copy dest_resource, request.overwrite?, depth
+      resource.copy dest_resource, request.overwrite?, request.depth
     end
 
     # Return response to PROPFIND
@@ -274,11 +274,11 @@ module DAV4Rack
     # Return response to PROPPATCH
     def proppatch
       return NotFound   unless resource.exist?
-      return BadRequest unless request_document
+      return BadRequest unless doc = request.document
 
       resource.lock_check if resource.supports_locking?
       properties = {}
-      request_document.xpath("/#{ns}propertyupdate").children.each do |element|
+      doc.xpath("/#{request.ns}propertyupdate").children.each do |element|
         action = element.name
         if action == 'set' || action == 'remove'
           properties[action] ||= []
@@ -303,6 +303,7 @@ module DAV4Rack
     # NOTE: This will pass an argument hash to Resource#lock and
     # wait for a success/failure response.
     def lock
+      depth = request.depth
       return BadRequest unless depth == 0 || depth == :infinity
 
       asked = { depth: depth }
@@ -311,8 +312,8 @@ module DAV4Rack
         asked[:timeout] = timeout.split(',').map{|x|x.strip}
       end
 
-      if request_document and
-        lockinfo = request_document.xpath("//#{ns}lockinfo")
+      ns = request.ns
+      if doc = request.document and lockinfo = doc.xpath("//#{ns}lockinfo")
 
         asked[:scope] = lockinfo.xpath("//#{ns}lockscope").children.find_all{|n|n.element?}.map{|n|n.name}.first
         asked[:type] = lockinfo.xpath("#{ns}locktype").children.find_all{|n|n.element?}.map{|n|n.name}.first
@@ -350,7 +351,7 @@ module DAV4Rack
 
     # Unlock current resource
     def unlock
-      resource.unlock(lock_token)
+      resource.unlock(request.lock_token)
     end
 
 
