@@ -230,7 +230,7 @@ module DAV4Rack
 
         r = XmlResponse.new(response, resource.namespaces)
         r.multistatus do |xml|
-          xml << Ox::Raw.new(resource.propnames_xml_with_depth(depth))
+          xml << Ox::Raw.new(resource.propnames_xml_with_depth)
         end
         return MultiStatus
 
@@ -259,9 +259,7 @@ module DAV4Rack
       properties = properties.empty? ? resource.properties : properties
       properties = properties.map{|property| {element: property}}
       properties = resource.propfind_add_additional_properties(properties)
-      prop_xml = resource.properties_xml_with_depth(
-                   { get: properties }, depth
-                 )
+      prop_xml = resource.properties_xml_with_depth(get: properties)
 
       r = XmlResponse.new(response, resource.namespaces)
       r.multistatus do |xml|
@@ -293,7 +291,7 @@ module DAV4Rack
 
       r = XmlResponse.new(response, resource.namespaces)
       r.multistatus do |xml|
-        xml << Ox::Raw.new(resource.properties_xml_with_depth(properties, depth))
+        xml << Ox::Raw.new(resource.properties_xml_with_depth(properties))
       end
       MultiStatus
     end

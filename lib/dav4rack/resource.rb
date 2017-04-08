@@ -475,13 +475,13 @@ module DAV4Rack
       <th class="mtime">Last Modified</th> </tr> %s </table> <hr /> </body></html>'
     end
 
-    def properties_xml_with_depth(process_properties, depth)
+    def properties_xml_with_depth(process_properties, depth = request.depth)
       xml_with_depth self, depth do |element, ox_doc|
         ox_doc << element.properties_xml(process_properties)
       end
     end
 
-    def propnames_xml_with_depth(depth)
+    def propnames_xml_with_depth(depth = request.depth)
       xml_with_depth self, depth do |element, ox_doc|
         ox_doc << element.propnames_xml
       end
