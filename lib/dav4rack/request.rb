@@ -98,6 +98,11 @@ module DAV4Rack
     def request_document
       @request_document ||= parse_request_body
     end
+    alias document request_document
+
+    def url_for(path)
+      "#{scheme}://#{host}:#{port}#{path}"
+    end
 
 
     REDIRECTABLE_CLIENTS = [

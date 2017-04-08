@@ -131,7 +131,9 @@ module DAV4Rack
       else
         resource.lock_check if resource.supports_locking?
         status = resource.put(request, response)
-        response['Location'] = "#{scheme}://#{host}:#{port}#{resource.url_format}" if status == Created
+        if status == Created
+          response['Location'] = request.url_for resource.url_format
+        end
         response.body = response['Location'] || ''
         status
       end
@@ -161,7 +163,7 @@ module DAV4Rack
 
       resource.lock_check if resource.supports_locking?
       status = resource.make_collection
-      gen_url = "#{scheme}://#{host}:#{port}#{resource.url_format}" if status == Created
+      gen_url = request.url_for resource.url_format if status == Created
       if(resource.use_compat_mkcol_response?)
         r = XmlResponse.new(response, resource.namespaces)
         r.multistatus do |xml|
