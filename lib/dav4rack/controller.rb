@@ -218,15 +218,20 @@ module DAV4Rack
 
     # Return response to PROPFIND
     def propfind
-      return NotFound unless(resource.exist?)
+      return NotFound unless resource.exist?
+
+      ns = request.ns
+      propfind = request.document.xpath("//#{ns}propfind") if request.document
+      properties = nil
 
       if request.content_length.to_i == 0 or
-        request_document.xpath("//#{ns}propfind").empty? or
-        !request_document.xpath("//#{ns}propfind/#{ns}allprop").empty?
+                      propfind.nil? or
+                      propfind.empty? or
+                      !propfind.xpath("//#{ns}allprop").empty?
 
         properties = resource.properties
 
-      elsif !request_document.xpath("//#{ns}propfind/#{ns}propname").empty?
+      elsif !propfind.xpath("//#{ns}propname").empty?
 
         r = XmlResponse.new(response, resource.namespaces)
         r.multistatus do |xml|
@@ -234,26 +239,22 @@ module DAV4Rack
         end
         return MultiStatus
 
+      elsif !(prop = propfind.xpath("//#{ns}prop")).empty?
+        properties = prop.children
+          .find_all{ |item| item.element? }
+          .map{ |item|
+          # We should do this, but Nokogiri transforms prefix w/ null href into
+          # something valid.  Oops.
+          # TODO: Hacky grep fix that's horrible
+          hsh = to_element_hash(item)
+          if(hsh.namespace.nil? && !ns.empty?)
+            return BadRequest if request_document.to_s.scan(%r{<#{item.name}[^>]+xmlns=""}).empty?
+          end
+          hsh
+        }.compact
+
       else
-        check = request_document.xpath("//#{ns}propfind")
-        if(check && !check.empty?)
-          properties = request_document.xpath(
-            "//#{ns}propfind/#{ns}prop"
-          ).children.find_all{ |item|
-            item.element?
-          }.map{ |item|
-            # We should do this, but Nokogiri transforms prefix w/ null href into
-            # something valid.  Oops.
-            # TODO: Hacky grep fix that's horrible
-            hsh = to_element_hash(item)
-            if(hsh.namespace.nil? && !ns.empty?)
-              raise BadRequest if request_document.to_s.scan(%r{<#{item.name}[^>]+xmlns=""}).empty?
-            end
-            hsh
-          }.compact
-        else
-          raise BadRequest
-        end
+        return BadRequest
       end
 
       properties = properties.empty? ? resource.properties : properties
@@ -376,41 +377,6 @@ module DAV4Rack
 
     def authentication_realm
       resource.authentication_realm
-    end
-
-
-
-    # Current request scheme (http/https)
-    def scheme
-      request.scheme
-    end
-
-    # Request host
-    def host
-      request.host
-    end
-
-    # Request port
-    def port
-      request.port
-    end
-
-    # Lock token if provided by client
-    def lock_token
-      request.lock_token
-    end
-
-    # Requested depth
-    def depth
-      request.depth
-    end
-
-    def request_document
-      request.request_document
-    end
-
-    def ns(*_)
-      request.ns(*_)
     end
 
 
