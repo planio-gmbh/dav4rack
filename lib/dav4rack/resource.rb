@@ -579,7 +579,7 @@ module DAV4Rack
 
     # adds the given xml namespace to namespaces and returns the prefix
     def add_namespace(ns, prefix = "unknown#{rand 65536}")
-      return nil if ns.blank?
+      return nil if ns.nil? || ns.empty?
       unless namespaces.key? ns
         namespaces[ns] = prefix
         return prefix
