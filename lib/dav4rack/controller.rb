@@ -221,45 +221,48 @@ module DAV4Rack
       return NotFound unless resource.exist?
 
       ns = request.ns
-      propfind = request.document.xpath("//#{ns}propfind") if request.document
-      properties = nil
+      document = request.document if request.content_length.to_i > 0
+      propfind = document.xpath("//#{ns}propfind") if document
 
-      if request.content_length.to_i == 0 or
-                      propfind.nil? or
-                      propfind.empty? or
-                      !propfind.xpath("//#{ns}allprop").empty?
-
-        properties = resource.properties
-
-      elsif !propfind.xpath("//#{ns}propname").empty?
+      # propname request
+      if propfind and propfind.xpath("//#{ns}propname").first
 
         r = XmlResponse.new(response, resource.namespaces)
         r.multistatus do |xml|
           xml << Ox::Raw.new(resource.propnames_xml_with_depth)
         end
         return MultiStatus
-
-      elsif !(prop = propfind.xpath("//#{ns}prop")).empty?
-        properties = prop.children
-          .find_all{ |item| item.element? }
-          .map{ |item|
-          # We should do this, but Nokogiri transforms prefix w/ null href into
-          # something valid.  Oops.
-          # TODO: Hacky grep fix that's horrible
-          hsh = to_element_hash(item)
-          if(hsh.namespace.nil? && !ns.empty?)
-            return BadRequest if request_document.to_s.scan(%r{<#{item.name}[^>]+xmlns=""}).empty?
-          end
-          hsh
-        }.compact
-
-      else
-        return BadRequest
       end
 
-      properties = properties.empty? ? resource.properties : properties
+
+      properties = if propfind.nil? or
+                      propfind.empty? or
+                      propfind.xpath("//#{ns}allprop").first
+
+        resource.properties
+
+      elsif prop = propfind.xpath("//#{ns}prop").first
+
+        prop.children
+          .find_all{ |item| item.element? }
+          .map{ |item|
+            # We should do this, but Nokogiri transforms prefix w/ null href
+            # into something valid.  Oops.
+            # TODO: Hacky grep fix that's horrible
+            hsh = to_element_hash(item)
+            if(hsh.namespace.nil? && !ns.empty?)
+              return BadRequest if prop.to_s.scan(%r{<#{item.name}[^>]+xmlns=""}).empty?
+            end
+            hsh
+          }.compact
+      else
+        Logger.error "no properties found"
+        raise BadRequest
+      end
+
       properties = properties.map{|property| {element: property}}
       properties = resource.propfind_add_additional_properties(properties)
+
       prop_xml = resource.properties_xml_with_depth(get: properties)
 
       r = XmlResponse.new(response, resource.namespaces)
