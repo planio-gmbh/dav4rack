@@ -3,9 +3,10 @@ require 'test_helper'
 require 'mongo'
 require 'dav4rack/resources/mongo_resource'
 
-require_relative 'file_resource_test'
+require_relative 'generic_resource_tests'
 
-class MongoResourceTest < FileResourceTest
+class MongoResourceTest < DAV4RackIntegrationTest
+  include GenericResourceTests
 
   Mongo::Logger.logger.level = ::Logger::INFO
 
