@@ -6,6 +6,9 @@ rvm:
   - 2.3.1
   - 2.4.1
   - jruby-9.1.2.0
+env:
+  global:
+    - RUBYOPT=-W1
 before_install:
   - gem update --system
   - gem --version # make sure rubygems actually were updated
@@ -13,4 +16,7 @@ before_install:
 before_script:
   - rm -rf /tmp/dav-file-store
   - mkdir /tmp/dav-file-store
-script: ./test/litmus_travis.sh
+  - bundle exec dav4rack --root /tmp/dav-file-store &
+script:
+  - bundle exec rake
+  - ./test/litmus_travis.sh

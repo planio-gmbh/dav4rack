@@ -6,3 +6,4 @@ wget -O /tmp/litmus/litmus-0.13.tar.gz http://www.webdav.org/neon/litmus/litmus-
 tar -C /tmp/litmus -xvzf /tmp/litmus/litmus-0.13.tar.gz
 cd /tmp/litmus/litmus-0.13
 ./configure
+make

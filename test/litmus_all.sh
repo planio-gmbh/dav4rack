@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 
 # Run tests
 RUBYOPT=-W1 bundle exec rake
@@ -32,15 +32,7 @@ if [ ! -f /tmp/litmus/litmus-0.13.tar.gz ]; then
   ./configure
 fi
 
-cd /tmp/litmus/litmus-0.13 
+cd /tmp/litmus/litmus-0.13
 make URL=http://localhost:3000/ check
-
-LITMUS=$?
-
 kill $DAV_PID
 
-if [ $? -ne 0 ] ; then
-  echo
-  echo "*** Litmus failed to properly complete"
-  exit 1
-fi
