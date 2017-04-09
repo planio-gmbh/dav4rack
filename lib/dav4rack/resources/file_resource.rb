@@ -199,9 +199,9 @@ module DAV4Rack
     # name:: String - Property name
     # Returns the value of the given property
     def get_property(name)
-      begin
+      if name[:ns_href] == DAV_NAMESPACE
         super
-      rescue NotImplemented
+      else
         custom_props(name)
       end
     end
@@ -210,10 +210,11 @@ module DAV4Rack
     # value:: New value
     # Set the property to the given value
     def set_property(name, value)
-      begin
+      # let Resource handle DAV properties
+      if name[:ns_href] == DAV_NAMESPACE
         super
-      rescue NotImplemented
-        set_custom_props(name,value)
+      else
+        set_custom_props name, value
       end
     end
 
