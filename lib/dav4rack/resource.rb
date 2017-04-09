@@ -411,15 +411,10 @@ module DAV4Rack
     # name:: String - Property name
     # value:: New value
     # Set the property to the given value
+    #
+    # This default implementation does not allow any properties to be changed.
     def set_property(element, value)
-      return NotImplemented if (element[:ns_href] != DAV_NAMESPACE)
-      case element[:name]
-      when 'resourcetype'    then self.resource_type = value
-      when 'getcontenttype'  then self.content_type = value
-      when 'getetag'         then self.etag = value
-      when 'getlastmodified' then self.last_modified = Time.httpdate(value)
-      else                   NotImplemented
-      end
+      return Forbidden
     end
 
     # name:: Property name
