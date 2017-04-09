@@ -296,6 +296,14 @@ module DAV4Rack
       ::File.expand_path ::File.join(root, path)
     end
 
+    def prop_path
+      path = ::File.join(store_directory, "#{::File.join(::File.dirname(file_path), ::File.basename(file_path)).gsub('/', '_')}.pstore")
+      unless(::File.directory?(::File.dirname(path)))
+        FileUtils.mkdir_p(::File.dirname(path))
+      end
+      path
+    end
+
     private
 
     def lock_check(lock_type=nil)
@@ -340,14 +348,6 @@ module DAV4Rack
 
     def store_directory
       path = ::File.join(root, '.attrib_store')
-      unless(::File.directory?(::File.dirname(path)))
-        FileUtils.mkdir_p(::File.dirname(path))
-      end
-      path
-    end
-
-    def prop_path
-      path = ::File.join(store_directory, "#{::File.join(::File.dirname(file_path), ::File.basename(file_path)).gsub('/', '_')}.pstore")
       unless(::File.directory?(::File.dirname(path)))
         FileUtils.mkdir_p(::File.dirname(path))
       end
