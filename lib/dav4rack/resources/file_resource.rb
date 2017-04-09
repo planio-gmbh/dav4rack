@@ -343,8 +343,7 @@ module DAV4Rack
       val = prop_hash.transaction(true) do
         prop_hash[to_element_key(element)]
       end
-      raise NotFound unless val
-      val
+      val || NotFound
     end
 
     def store_directory
