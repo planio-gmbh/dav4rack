@@ -393,7 +393,7 @@ module DAV4Rack
     # name:: String - Property name
     # Returns the value of the given property
     def get_property(element)
-      return NotImplemented if (element[:ns_href] != DAV_NAMESPACE)
+      return NotFound if (element[:ns_href] != DAV_NAMESPACE)
       case element[:name]
       when 'resourcetype'     then resource_type
       when 'displayname'      then display_name
