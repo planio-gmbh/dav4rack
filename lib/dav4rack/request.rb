@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'addressable/uri'
+require 'dav4rack/logger'
 
 module DAV4Rack
   class Request < Rack::Request
@@ -157,12 +158,11 @@ module DAV4Rack
     end
 
     def parse_request_body
-      unless body.nil? || body.size == 0
-        return Nokogiri.XML(body.read){ |config|
-          config.strict
-        }
-      end
+      return Nokogiri.XML(body.read){ |config|
+        config.strict
+      } if body
     rescue
+      DAV4Rack::Logger.error $!.message
       raise ::DAV4Rack::HTTPStatus::BadRequest
     end
 
