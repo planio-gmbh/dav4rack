@@ -45,9 +45,9 @@ module DAV4Rack
 
     # Namespace being used within XML document
     def ns(wanted_uri = XmlElements::DAV_NAMESPACE)
-      if request_document and
-        request_document.root and
-        ns_defs = request_document.root.namespace_definitions and
+      if document and
+        root = document.root and
+        ns_defs = root.namespace_definitions and
         ns_defs.size > 0
 
         result = ns_defs.detect{ |nd| nd.href == wanted_uri } || ns_defs.first
@@ -96,11 +96,11 @@ module DAV4Rack
 
 
     # parsed XML request body if any (Nokogiri XML doc)
-    def request_document
-      @request_document ||= parse_request_body
+    def document
+      @request_document ||= parse_request_body unless content_length.to_i == 0
     end
-    alias document request_document
 
+    # builds a URL for path using this requests scheme, host and port.
     def url_for(path)
       "#{scheme}://#{host}:#{port}#{path}"
     end
