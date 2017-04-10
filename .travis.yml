@@ -5,7 +5,6 @@ rvm:
   - 2.2.5
   - 2.3.1
   - 2.4.1
-  - jruby-9.1.2.0
 env:
   global:
     - RUBYOPT=-W1
