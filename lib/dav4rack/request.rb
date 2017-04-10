@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'uri'
 require 'addressable/uri'
 require 'dav4rack/logger'
 
@@ -9,15 +10,9 @@ module DAV4Rack
     # Root URI path for the resource
     attr_reader :root_uri_path
 
-    # options:
-    #   root_uri_path: mount point of the handler, either absolute or relative
-    #   to env['SCRIPT_NAME']. Must be blank or start with a forward slash.
-    def initialize(env, options)
+    def initialize(env, options = {})
       super env
-
       sanitize_path_info
-
-      self.root_uri_path = options[:root_uri_path]
     end
 
 
@@ -26,9 +21,8 @@ module DAV4Rack
     end
 
     # path relative to root uri
-    def relative_path
-      @relative_path ||= unescaped_path.slice(@root_uri_path.length,
-                                              unescaped_path.length)
+    def unescaped_path_info
+      @unescaped_path_info ||= self.class.unescape_path path_info
     end
 
     # the full path (script_name aka rack mount point + path_info)
@@ -82,9 +76,7 @@ module DAV4Rack
     # Destination header
     def destination
       @destination ||= if h = get_header('HTTP_DESTINATION')
-        DestinationHeader.new(
-          h, script_name: root_uri_path
-        )
+        DestinationHeader.new h, script_name: script_name
       end
     end
 
@@ -100,9 +92,26 @@ module DAV4Rack
       @request_document ||= parse_request_body unless content_length.to_i == 0
     end
 
-    # builds a URL for path using this requests scheme, host and port.
-    def url_for(path)
+    # builds a URL for path using this requests scheme, host, port and
+    # script_name
+    # path must be valid UTF-8 and will be url encoded by this method
+    def url_for(rel_path, collection: false)
+      path = path_for rel_path, collection: collection
       "#{scheme}://#{host}:#{port}#{path}"
+    end
+
+    # returns an url encoded, absolute path for the given relative path
+    def path_for(rel_path, collection: false)
+      path = Addressable::URI.encode_component rel_path
+      if collection and path[-1] != ?/
+        path << '/'
+      end
+      "#{script_name}#{expand_path path}"
+    end
+
+    # expands '/foo/../bar' to '/bar'
+    def expand_path(path)
+      URI.join("http://example.com/", path).path
     end
 
 
@@ -138,23 +147,9 @@ module DAV4Rack
 
     private
 
-    def root_uri_path=(p)
-      if p
-        @root_uri_path = p.chomp '/'
-        unless @root_uri_path.start_with? script_name
-          @root_uri_path.prepend script_name.chomp('/')
-        end
-      else
-        @root_uri_path = script_name.chomp('/')
-      end
-    end
-
     def sanitize_path_info
-      # expand '..' but preserve trailing slash
-      collection = path_info.end_with? '/'
-      self.path_info = ::File.expand_path(path_info)
       self.path_info.force_encoding 'UTF-8'
-      self.path_info << '/' if collection and !path_info.end_with?('/')
+      self.path_info = expand_path path_info
     end
 
     def parse_request_body

@@ -132,7 +132,7 @@ module DAV4Rack
         resource.lock_check if resource.supports_locking?
         status = resource.put(request, response)
         if status == Created
-          response['Location'] = request.url_for resource.url_format
+          response['Location'] ||= request.url_for resource.path
         end
         response.body = response['Location'] || ''
         status
@@ -163,11 +163,12 @@ module DAV4Rack
 
       resource.lock_check if resource.supports_locking?
       status = resource.make_collection
-      gen_url = request.url_for resource.url_format if status == Created
+
       if(resource.use_compat_mkcol_response?)
+        url = request.url_for resource.path, collection: true
         r = XmlResponse.new(response, resource.namespaces)
         r.multistatus do |xml|
-          xml << r.response(gen_url, status)
+          xml << r.response(url, status)
         end
         MultiStatus
       else
@@ -188,12 +189,7 @@ module DAV4Rack
 
       resource.lock_check if resource.supports_locking?
 
-      dest_resource = resource_class.new(
-        dest.path, dest.path_info,
-        request, response, @options.merge(user: resource.user)
-      )
-
-      return resource.move dest_resource, request.overwrite?
+      return resource.move dest.path_info, request.overwrite?
     end
 
 
@@ -208,12 +204,7 @@ module DAV4Rack
         return status
       end
 
-      dest_resource = resource_class.new(
-        dest.path, dest.path_info,
-        request, response, @options.merge(user: resource.user)
-      )
-
-      resource.copy dest_resource, request.overwrite?, request.depth
+      resource.copy dest.path_info, request.overwrite?, request.depth
     end
 
     # Return response to PROPFIND
@@ -386,8 +377,7 @@ module DAV4Rack
     # override this for custom resource initialization
     def setup_resource
       @resource = resource_class.new(
-        request.unescaped_path, request.relative_path,
-        request, response, @options
+        request.unescaped_path_info, request, response, @options
       )
     end
 

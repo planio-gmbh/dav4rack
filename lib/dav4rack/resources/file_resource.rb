@@ -117,12 +117,12 @@ module DAV4Rack
 
     # HTTP COPY request.
     #
-    # Copy this resource to given destination resource.
-    # Copy this resource to given destination resource.
-    def copy(dest, overwrite, depth = nil)
+    # Copy this resource to given destination path.
+    def copy(dest_path, overwrite, depth = nil)
 
       is_new = true
 
+      dest = new_for_path dest_path
       unless dest.parent.exist? and dest.parent.collection?
         return Conflict
       end

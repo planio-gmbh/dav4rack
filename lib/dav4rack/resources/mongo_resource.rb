@@ -149,8 +149,9 @@ module DAV4Rack
 
     # HTTP COPY request.
     #
-    # Copy this resource to given destination resource.
-    def copy(dest, overwrite = false, depth = :infinity)
+    # Copy this resource to given destination path.
+    def copy(dest_path, overwrite = false, depth = :infinity)
+      dest = new_for_path dest_path
       dest.collection! if collection?
 
       src = @bson['filename']
@@ -182,8 +183,9 @@ module DAV4Rack
 
     # HTTP MOVE request.
     #
-    # Move this resource to given destination resource.
-    def move(dest, overwrite = false)
+    # Move this resource to given destination path.
+    def move(dest_path, overwrite = false)
+      dest = new_for_path dest_path
       dest.collection! if collection?
 
       src = @bson['filename']

@@ -14,35 +14,23 @@ class RequestTest < Minitest::Test
 
   def test_should_have_unescaped_path
     assert_equal '/fo o/a', request('PATH_INFO' => '/fo%20o/a').unescaped_path
-    assert_equal '/fo o/a', request('PATH_INFO' => '/fo%20o/a').relative_path
-    assert_equal '/fo o/a/', request('PATH_INFO' => '/fo%20o/a/').relative_path
+    assert_equal '/fo o/a', request('PATH_INFO' => '/fo%20o/a').unescaped_path_info
+    assert_equal '/fo o/a/', request('PATH_INFO' => '/fo%20o/a/').unescaped_path_info
   end
 
   def test_should_expand_pathinfo
     assert_equal '/a', request('PATH_INFO' => '/foo/../a').unescaped_path
-    assert_equal '/a', request('PATH_INFO' => '/foo/../a').relative_path
+    assert_equal '/a', request('PATH_INFO' => '/foo/../a').unescaped_path_info
 
     r = request('PATH_INFO' => '/foo/../../../a', 'SCRIPT_NAME' => '/redmine')
     assert_equal '/redmine/a', r.unescaped_path
-    assert_equal '/a', r.relative_path
+    assert_equal '/a', r.unescaped_path_info
   end
 
   def test_should_handle_script_name
     r = request('PATH_INFO' => '/fo%20o/a', 'SCRIPT_NAME' => '/redmine')
     assert_equal '/redmine/fo o/a', r.unescaped_path
-    assert_equal '/fo o/a', r.relative_path
-  end
-
-  def test_should_handle_script_name_and_root_uri
-    r = request({'PATH_INFO' => '/dav/fo%20o/a', 'SCRIPT_NAME' => '/redmine'},
-                {root_uri_path: '/redmine/dav'})
-    assert_equal '/redmine/dav/fo o/a', r.unescaped_path
-    assert_equal '/fo o/a', r.relative_path
-
-    r = request({'PATH_INFO' => '/dav/fo%20o/a', 'SCRIPT_NAME' => '/redmine'},
-                {root_uri_path: '/dav'})
-    assert_equal '/redmine/dav/fo o/a', r.unescaped_path
-    assert_equal '/fo o/a', r.relative_path
+    assert_equal '/fo o/a', r.unescaped_path_info
   end
 
   def test_should_parse_depth_header

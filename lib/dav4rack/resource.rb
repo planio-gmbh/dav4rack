@@ -22,7 +22,7 @@ module DAV4Rack
     include DAV4Rack::Utils
     include DAV4Rack::XmlElements
 
-    attr_reader :path, :public_path, :request,
+    attr_reader :path, :request,
       :response, :propstat_relative_path, :root_xml_attributes, :namespaces
     attr_accessor :user
     @@blocks = {}
@@ -56,8 +56,7 @@ module DAV4Rack
 
     include DAV4Rack::HTTPStatus
 
-    # public_path:: Path received via request
-    # path:: Internal resource path (Only different from public path when using root_uri's for webdav)
+    # path:: Internal resource path (unescaped PATH_INFO)
     # request:: Rack::Request
     # options:: Any options provided for this resource
     # Creates a new instance of the resource.
@@ -69,9 +68,12 @@ module DAV4Rack
     #       path -> /actual/path
     # NOTE: Customized Resources should not use initialize for setup. Instead
     #       use the #setup method
-    def initialize(public_path, path, request, response, options)
-      @public_path = public_path
+    def initialize(path, request, response, options)
+      if path.nil? || path.empty? || path[0] != ?/
+        raise ArgumentError, 'path must be present and start with a /'
+      end
       @path = path
+
       @propstat_relative_path = !!options[:propstat_relative_path]
       @root_xml_attributes = options.delete(:root_xml_attributes) || {}
       @namespaces = (options[:namespaces] || {}).merge({DAV_NAMESPACE => DAV_NAMESPACE_NAME})
@@ -89,6 +91,12 @@ module DAV4Rack
       @user = @options[:user] || request.ip
 
       setup
+    end
+
+    # returns a new instance for the given path
+    def new_for_path(path)
+      self.class.new path, request, response,
+        @options.merge(user: @user, namespaces: @namespaces)
     end
 
     # override to implement custom authentication
@@ -227,15 +235,15 @@ module DAV4Rack
 
     # HTTP COPY request.
     #
-    # Copy this resource to given destination resource.
-    def copy(dest, overwrite = false, depth = nil)
+    # Copy this resource to given destination path.
+    def copy(dest_path, overwrite = false, depth = nil)
       NotImplemented
     end
 
     # HTTP MOVE request.
     #
-    # Move this resource to given destination resource.
-    def move(dest, overwrite=false)
+    # Move this resource to given destination path.
+    def move(dest_path, overwrite=false)
       NotImplemented
     end
 
@@ -427,27 +435,17 @@ module DAV4Rack
     # Create a new child with the given name
     # NOTE:: Include trailing '/' if child is collection
     def child(name)
-      new_public = public_path.dup
-      new_public << '/'      unless new_public.end_with? '/'
-      new_public.prepend '/' unless new_public.start_with? '/'
-      new_path = path.dup
-      new_path << '/'      unless new_path.end_with? '/'
-      new_path.prepend '/' unless new_path.start_with? '/'
-      self.class.new("#{new_public}#{name}", "#{new_path}#{name}", request, response, @options.merge(:user => @user, :namespaces => @namespaces))
+      new_path = @path.dup
+      new_path << ?/ unless new_path[-1] == ?/
+      new_path << name
+      new_for_path new_path
     end
 
     # Return parent of this resource
     def parent
-      unless(@path.to_s.empty?)
-        self.class.new(
-          File.split(@public_path).first,
-          File.split(@path).first,
-          @request,
-          @response,
-          @options.merge(
-            :user => @user
-          )
-        )
+      return nil if @path == '/'
+      unless @path.to_s.empty?
+        new_for_path File.split(@path).first
       end
     end
 
@@ -482,15 +480,24 @@ module DAV4Rack
       end
     end
 
+    # Returns a complete URL for this resource.
+    # If the propstat_relative_path option is set, just an absolute path will
+    # be returned.
+    # If this is a collection, the result will end with a '/'
     def href
-      @href ||= build_href(public_path)
+      @href ||= build_href(path, collection: self.collection?)
     end
 
-    def build_href(path)
+    # Returns a complete URL for the given path.
+    #
+    # If the propstat_relative_path option is set, just an absolute path will
+    # be returned. If the :collection argument is true, the returned path will
+    # end with a '/'
+    def build_href(path, collection: false)
       if propstat_relative_path
-        url_format path
+        request.path_for path, collection: collection
       else
-        "#{request.scheme}://#{request.host}:#{request.port}#{url_format path}"
+        request.url_for path, collection: collection
       end
     end
 
@@ -622,15 +629,6 @@ module DAV4Rack
       end
     end
 
-
-    # Escape URL string
-    def url_format(path = public_path)
-      path = Addressable::URI.encode(path)
-      if collection? and !path.end_with? '/'
-        path << '/'
-      end
-      return path
-    end
 
     def use_compat_mkcol_response?
       @options[:compat_mkcol] || @options[:compat_all]
