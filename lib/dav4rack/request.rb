@@ -86,10 +86,14 @@ module DAV4Rack
       get_header('HTTP_OVERWRITE').to_s.upcase != 'F'
     end
 
+    # content_length as a Fixnum (0 if unset / empty)
+    def content_length
+      super.to_i
+    end
 
     # parsed XML request body if any (Nokogiri XML doc)
     def document
-      @request_document ||= parse_request_body unless content_length.to_i == 0
+      @request_document ||= parse_request_body unless content_length == 0
     end
 
     # builds a URL for path using this requests scheme, host, port and
