@@ -33,6 +33,9 @@ module DAV4Rack
       def explicit_locks(path, croot, args={})
       end
 
+      def implicit_locks(path, croot)
+      end
+
       def find_by_path(path, croot=nil)
         lock = self.class.new(:path => path, :root => croot)
         lock.token.nil? ? nil : lock
@@ -43,8 +46,8 @@ module DAV4Rack
         struct = store.transaction(true){
           store[:tokens][token]
         }
-        if(tok)
-          self.class.new(:path => struct[:path], :root => croot)
+        if(struct)
+          new(path: struct[:path], root: croot)
         else
           nil
         end
