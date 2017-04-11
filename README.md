@@ -209,6 +209,11 @@ class CustomMiddleware
 end
 ```
 
+You can add this middleware to your Rails app using
+
+```ruby
+Rails.configuration.middleware.insert_before ActionDispatch::Cookies, CustomMiddleware
+```
 
 ## Logging
 
