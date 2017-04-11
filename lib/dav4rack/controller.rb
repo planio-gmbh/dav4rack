@@ -404,10 +404,9 @@ module DAV4Rack
     def add_dav_header
       unless response['Dav']
         dav_support = ['1']
-        if !@always_include_dav_header || resource.supports_locking?
+        if resource.supports_locking?
           # compliance is resource specific, only advertise 2 (locking) if
-          # supported on the resource. If the header is only set on OPTIONS
-          # responses, advertise locking anyway
+          # supported on the resource.
           dav_support << '2'
         end
         dav_support += @dav_extensions if @dav_extensions
