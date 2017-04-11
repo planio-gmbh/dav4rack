@@ -43,7 +43,7 @@ module DAV4Rack
     # main entry point, called by the Handler
     def process
       if skip_authorization? || authenticate
-        status = send(request.request_method.downcase) || OK
+        status = process_action || OK
       else
         status = HTTPStatus::Unauthorized
       end
@@ -61,6 +61,13 @@ module DAV4Rack
 
 
     private
+
+    # delegates to the handler method matching this requests http method.
+    # must return an HTTPStatus. If nil / false, the resulting status will be
+    # 200/OK
+    def process_action
+      send request.request_method.downcase
+    end
 
 
     # if true, resource#authenticate will never be called
