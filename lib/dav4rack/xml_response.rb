@@ -21,7 +21,7 @@ module DAV4Rack
       @response.body = Ox.dump(xml_doc, {indent: -1, with_xml: true})
 
       @response["Content-Type"] = 'application/xml; charset=utf-8'
-      @response["Content-Length"] = @response.body.size.to_s
+      @response["Content-Length"] = @response.body.bytesize.to_s
     end
 
 

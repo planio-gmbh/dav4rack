@@ -95,7 +95,7 @@ module DAV4Rack
     
     # Size based on remote headers or given size
     def size
-      @heads['content-length'] || @size
+      @heads['content-length'] || @size.to_s
     end
     
     private
