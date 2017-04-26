@@ -7,7 +7,9 @@ class RequestTest < Minitest::Test
   def request(env = {}, options = {})
     env = {
       'HTTP_HOST' => 'localhost',
-      'REMOTE_USER' => 'user'
+      'REMOTE_USER' => 'user',
+      'rack.url_scheme' => 'https',
+      'SERVER_PORT' => 443,
     }.merge(env)
     DAV4Rack::Request.new(env, options)
   end
@@ -25,6 +27,11 @@ class RequestTest < Minitest::Test
     r = request('PATH_INFO' => '/foo/../../../a', 'SCRIPT_NAME' => '/redmine')
     assert_equal '/redmine/a', r.unescaped_path
     assert_equal '/a', r.unescaped_path_info
+  end
+
+  def test_should_expand_path_with_unescaped_special_chars
+    assert_equal '/a [foo].pdf', request('PATH_INFO' => '/foo/../a%20[foo].pdf').unescaped_path
+    assert_equal '/a f#o.pdf', request('PATH_INFO' => '/foo/../a%20f#o.pdf').unescaped_path
   end
 
   def test_should_handle_script_name
@@ -45,6 +52,17 @@ class RequestTest < Minitest::Test
     end
   end
 
+  def test_should_generate_path
+    r = request('PATH_INFO' => '/', 'SCRIPT_NAME' => '/redmine')
+    assert_equal '/redmine/fo%20o%5B%23.pdf',
+      r.path_for('/fo o[#.pdf')
+  end
+
+  def test_should_generate_url
+    r = request('PATH_INFO' => '/', 'SCRIPT_NAME' => '/redmine')
+    assert_equal 'https://localhost:443/redmine/fo%20o%5B%23.pdf',
+      r.url_for('/fo o[#.pdf')
+  end
 
 
 end

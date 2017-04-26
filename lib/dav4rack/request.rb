@@ -106,7 +106,7 @@ module DAV4Rack
 
     # returns an url encoded, absolute path for the given relative path
     def path_for(rel_path, collection: false)
-      path = Addressable::URI.encode_component rel_path
+      path = Addressable::URI.encode_component rel_path, Addressable::URI::CharacterClasses::PATH
       if collection and path[-1] != ?/
         path << '/'
       end
@@ -115,6 +115,7 @@ module DAV4Rack
 
     # expands '/foo/../bar' to '/bar'
     def expand_path(path)
+      path = Addressable::URI.normalize_component path, Addressable::URI::CharacterClasses::PATH
       URI("http://example.com/").merge(path).path
     end
 
