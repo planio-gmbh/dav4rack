@@ -9,7 +9,7 @@ module GenericResourceTests
       assert @response['allow'].include?(method), "headers did not include #{method}"
     end
 
-    assert @response.headers['Dav'].start_with? '1,'
+    assert_equal '1', @response.headers['Dav']
   end
 
 
