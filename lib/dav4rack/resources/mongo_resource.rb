@@ -30,7 +30,7 @@ module DAV4Rack
     def child(bson)
       our_options = @options.dup
       @options[:bson] = bson
-      child = super bson['filename']
+      child = new_for_path bson['filename']
       @options = our_options
       child
     end
@@ -88,11 +88,13 @@ module DAV4Rack
       return NotFound unless exist?
 
       if collection?
-        response.body = "<html>"
+        response.body = "<html>".dup
         response.body << "<h2>" + ERB::Util.html_escape(path) + "</h2>"
         children.each do |child|
-          name = ERB::Util.html_escape child.path
-          path = ERB::Util.html_escape child.public_path
+          name = ERB::Util.html_escape child.name
+
+          path = ERB::Util.html_escape request.path_for(child.path,
+                                                        collection: child.collection?)
           response.body << "<a href='" + path + "'>" + name + "</a>"
           response.body << "</br>"
         end
