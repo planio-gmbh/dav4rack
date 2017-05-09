@@ -2,21 +2,21 @@ require 'test_helper'
 require 'ruby-prof'
 require 'benchmark'
 
-class PropfindTest < DAV4RackTestCase
+class PropfindTest < DAV4RackIntegrationTest
 
-  setup do
+  def setup
     @handler = DAV4Rack::Handler.new
 
     @xml = render(:propfind) {|x| x.allprop }
 
     1000.times do |index|
-      FileUtils.mkdir(File.join(DOC_ROOT, "dir_#{index}"))
+      FileUtils.mkdir_p(File.join(DOC_ROOT, "dir_#{index}"))
     end
   end
 
 
-  test 'profile' do
-    omit unless ENV['PROFILE']
+  def test_profile
+    skip unless ENV['PROFILE']
 
     RubyProf.start
     propfind '/', input: @xml
@@ -29,7 +29,7 @@ class PropfindTest < DAV4RackTestCase
   end
 
 
-  test 'propfind should be fast' do
+  def test_propfind_should_be_fast
     # without ox 9.080960035324097
     # with ox 6.845001220703125
     # second pass with ox 4.0348320007
@@ -39,7 +39,7 @@ class PropfindTest < DAV4RackTestCase
       end
     end
 
-    assert b.real <= 2.0, "time taken should be less than 2 seconds"
+    assert b.real <= 3.0, "time taken should be less than 3 seconds, was: #{b.real}"
 
     assert_match(/http:\/\/localhost(:\d+)?\//, multistatus_response('/d:href').first.text.strip)
     props = %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength)
