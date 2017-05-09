@@ -12,6 +12,18 @@ module GenericResourceTests
     assert_equal '1', @response.headers['Dav']
   end
 
+  def test_should_render_directory_index
+    mkcol('/folder')
+    put('/folder/somefile', :input => 'body')
+
+    get '/'
+    assert_response :ok
+    assert_match '>folder', @response.body
+
+    get '/folder'
+    assert_response :ok
+    assert_match '>somefile', @response.body
+  end
 
 
   def test_should_propfind_with_depth_zero
