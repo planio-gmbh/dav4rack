@@ -34,6 +34,12 @@ class RequestTest < Minitest::Test
     assert_equal '/a f#o.pdf', request('PATH_INFO' => '/foo/../a%20f#o.pdf').unescaped_path
   end
 
+  def test_should_normalize_path_with_double_slashes
+    assert_equal '/foo', request('PATH_INFO' => '/').expand_path('//foo')
+    assert_equal '/foo/', request('PATH_INFO' => '/').expand_path('//foo/')
+    assert_equal '/foo/a', request('PATH_INFO' => '/').expand_path('//foo/a')
+  end
+
   def test_should_handle_script_name
     r = request('PATH_INFO' => '/fo%20o/a', 'SCRIPT_NAME' => '/redmine')
     assert_equal '/redmine/fo o/a', r.unescaped_path

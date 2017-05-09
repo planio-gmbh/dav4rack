@@ -115,6 +115,7 @@ module DAV4Rack
 
     # expands '/foo/../bar' to '/bar'
     def expand_path(path)
+      path.squeeze! '/'
       path = Addressable::URI.normalize_component path, Addressable::URI::CharacterClasses::PATH
       URI("http://example.com/").merge(path).path
     end
