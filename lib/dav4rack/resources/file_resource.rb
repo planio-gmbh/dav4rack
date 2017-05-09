@@ -70,7 +70,7 @@ module DAV4Rack
     def get(request, response)
       return NotFound unless exist?
       if stat.directory?
-        response.body = ""
+        response.body = "".dup
         Rack::Directory.new(root).call(request.env)[2].each do |line|
           response.body << line
         end
