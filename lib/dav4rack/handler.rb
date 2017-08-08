@@ -12,6 +12,8 @@ module DAV4Rack
     # - controller_class: custom Controller implementation (optional).
     # - root_uri_path: Path the handler is mapped to. Any resources
     #   instantiated will only see the part of the path below this root.
+    # - recursive_propfind_allowed (true) : set to false to disable
+    #   potentially expensive Depth: Infinity propfinds
     # - all options are passed on to your resource implementation and are
     #   accessible there as @options.
     #

@@ -10,8 +10,14 @@ module DAV4Rack
     # Root URI path for the resource
     attr_reader :root_uri_path
 
+    # options:
+    #
+    # recursive_propfind_allowed (true) : set to false to disable
+    # potentially expensive recursive propfinds
+    #
     def initialize(env, options = {})
       super env
+      @options = { recursive_propfind_allowed: true }.merge options
       sanitize_path_info
     end
 
@@ -66,8 +72,10 @@ module DAV4Rack
       @http_depth ||= begin
         if d = get_header('HTTP_DEPTH') and (d == '0' or d == '1')
           d.to_i
-        else
+        elsif infinity_depth_allowed?
           :infinity
+        else
+          1
         end
       end
     end
@@ -152,6 +160,16 @@ module DAV4Rack
     end
 
     private
+
+    # true if Depth: Infinity is allowed for this request.
+    #
+    # http://www.webdav.org/specs/rfc4918.html#METHOD_PROPFIND
+    # Servers ... should support "infinity" requests. In practice,
+    # support for infinite-depth requests may be disabled, due to the
+    # performance and security concerns associated with this behavior
+    def infinity_depth_allowed?
+      request_method != 'PROPFIND' or @options[:recursive_propfind_allowed]
+    end
 
     def sanitize_path_info
       self.path_info.force_encoding 'UTF-8'
