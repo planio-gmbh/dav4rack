@@ -94,9 +94,11 @@ module DAV4Rack
       get_header('HTTP_OVERWRITE').to_s.upcase != 'F'
     end
 
-    # content_length as a Fixnum (0 if unset / empty)
+    # content_length as a Fixnum (nil if the header is unset / empty)
     def content_length
-      super.to_i
+      if length = super
+        length.to_i
+      end
     end
 
     # parsed XML request body if any (Nokogiri XML doc)
