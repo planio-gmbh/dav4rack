@@ -131,7 +131,14 @@ module DAV4Rack
 
     # Return response to PUT
     def put
-      if(resource.collection?)
+      if request.get_header('HTTP_CONTENT_RANGE')
+        # An origin server that allows PUT on a given target resource MUST send
+        # a 400 (Bad Request) response to a PUT request that contains a
+        # Content-Range header field.
+        # Reference: http://tools.ietf.org/html/rfc7231#section-4.3.4
+        Logger.error 'Content-Range on PUT requests is forbidden.'
+        BadRequest
+      elsif(resource.collection?)
         Forbidden
       elsif(!resource.parent_exists? || !resource.parent_collection?)
         Conflict
