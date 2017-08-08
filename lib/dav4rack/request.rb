@@ -96,7 +96,7 @@ module DAV4Rack
 
     # content_length as a Fixnum (nil if the header is unset / empty)
     def content_length
-      if length = super
+      if length = (super || get_header('HTTP_X_EXPECTED_ENTITY_LENGTH'))
         length.to_i
       end
     end
