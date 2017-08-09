@@ -170,7 +170,7 @@ module DAV4Rack
 
     # Return response to MKCOL
     def mkcol
-      if request.content_length > 0
+      if request.content_length.to_i > 0
         return UnsupportedMediaType
       end
       return MethodNotAllowed if resource.exist?
@@ -226,7 +226,7 @@ module DAV4Rack
       return NotFound unless resource.exist?
 
       ns = request.ns
-      document = request.document if request.content_length > 0
+      document = request.document if request.content_length.to_i > 0
       propfind = document.xpath("//#{ns}propfind") if document
 
       # propname request
