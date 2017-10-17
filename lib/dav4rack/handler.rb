@@ -46,7 +46,7 @@ module DAV4Rack
       response.finish
 
     rescue Exception => e
-      Logger.error "WebDAV Error: #{e}\n#{e.backtrace.join("\n")}"
+      Logger.error "WebDAV Error: #{e}"
       raise e
     end
 
