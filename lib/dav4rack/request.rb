@@ -103,7 +103,7 @@ module DAV4Rack
 
     # parsed XML request body if any (Nokogiri XML doc)
     def document
-      @request_document ||= parse_request_body unless content_length == 0
+      @request_document ||= parse_request_body if content_length && content_length > 0
     end
 
     # builds a URL for path using this requests scheme, host, port and
