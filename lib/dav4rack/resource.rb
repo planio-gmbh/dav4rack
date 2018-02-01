@@ -375,7 +375,7 @@ module DAV4Rack
       getlastmodified
       creationdate
       displayname
-      executable
+      execute
     ).map{|prop| { name: prop, ns_href: DAV_NAMESPACE } }.freeze
 
     def properties
