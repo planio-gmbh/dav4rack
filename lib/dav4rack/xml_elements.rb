@@ -29,7 +29,6 @@ module DAV4Rack
       response
       status
       timeout
-      executable
     ).each do |name|
       const_set "D_#{name.upcase.gsub('-', '_')}", "#{DAV_NAMESPACE_NAME}:#{name}"
     end
