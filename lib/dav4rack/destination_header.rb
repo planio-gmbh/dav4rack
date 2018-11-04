@@ -7,7 +7,10 @@ module DAV4Rack
 
     def initialize(value, script_name: nil)
       @script_name = script_name.to_s
-      @value = value.to_s.strip
+      # more than one leading slash confuses Addressable::URI, resulting e.g.
+      # with //remote.php/dav/files in a path of /dav/files with a host
+      # remote.php.
+      @value = value.to_s.strip.sub %r{\A/+}, '/'
       parse
     end
 
