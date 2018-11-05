@@ -44,6 +44,10 @@ class RequestTest < Minitest::Test
     r = request('PATH_INFO' => '/fo%20o/a', 'SCRIPT_NAME' => '/redmine')
     assert_equal '/redmine/fo o/a', r.unescaped_path
     assert_equal '/fo o/a', r.unescaped_path_info
+
+    assert_equal "/foo bar", r.path_info_for("/redmine/foo%20bar")
+    assert_nil r.path_info_for("/redmine/foo%20bar", script_name: '/other')
+    assert_equal "/foo bar", r.path_info_for("/other/foo%20bar", script_name: '/other')
   end
 
   def test_should_parse_depth_header

@@ -197,7 +197,8 @@ module DAV4Rack
       return BadRequest unless request.depth == :infinity
 
       return BadRequest unless dest = request.destination
-      if status = dest.validate
+      if status = dest.validate(host: request.host,
+                                resource_path: resource.path)
         return status
       end
 
