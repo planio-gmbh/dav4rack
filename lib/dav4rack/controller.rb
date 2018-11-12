@@ -102,12 +102,14 @@ module DAV4Rack
     # Return response to HEAD
     def head
       if(resource.exist?)
-        response['Etag'] = resource.etag
-        response['Content-Type'] = resource.content_type
-        response['Content-Length'] = resource.content_length.to_s
-        response['Last-Modified'] = resource.last_modified.httpdate
-        resource.head(request, response)
-        OK
+        res = resource.head(request, response)
+        if(res == OK)
+          response['Etag'] ||= resource.etag
+          response['Content-Type'] ||= resource.content_type
+          response['Content-Length'] ||= resource.content_length.to_s
+          response['Last-Modified'] ||= resource.last_modified.httpdate
+        end
+        res
       else
         NotFound
       end
