@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ ! -f /tmp/litmus/litmus-0.13.tar.gz ]; then
-  puts "call setup_litmus.sh first!"
+  echo "call setup_litmus.sh first!"
   exit 1
 fi
 
