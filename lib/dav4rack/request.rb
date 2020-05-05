@@ -24,7 +24,11 @@ module DAV4Rack
 
 
     def authorization?
-      !!env['HTTP_AUTHORIZATION']
+      !!authorization
+    end
+
+    def authorization
+      get_header 'HTTP_AUTHORIZATION'
     end
 
     # path relative to root uri
