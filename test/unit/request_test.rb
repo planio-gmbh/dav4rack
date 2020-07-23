@@ -40,6 +40,10 @@ class RequestTest < Minitest::Test
     assert_equal '/foo/a', request('PATH_INFO' => '/').expand_path('//foo/a')
   end
 
+  def test_should_not_change_chars
+    assert_equal "/TMD7DU0-I17U-RISK-2ºSEMESTRE 2017.xlsx", request('PATH_INFO' => '/TMD7DU0-I17U-RISK-2%C2%BASEMESTRE%202017.xlsx').unescaped_path
+  end
+
   def test_should_handle_script_name
     r = request('PATH_INFO' => '/fo%20o/a', 'SCRIPT_NAME' => '/redmine')
     assert_equal '/redmine/fo o/a', r.unescaped_path

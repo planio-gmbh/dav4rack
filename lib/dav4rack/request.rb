@@ -135,11 +135,15 @@ module DAV4Rack
       return uri.path_info
     end
 
-    # expands '/foo/../bar' to '/bar'
+    # expands '/foo/../bar' to '/bar', peserving trailing slash and normalizing
+    # consecutive slashes. adds a leading slash if missing
     def expand_path(path)
-      path.squeeze! '/'
-      path = Addressable::URI.normalize_component path, Addressable::URI::CharacterClasses::PATH
-      URI("http://example.com/").merge(path).path
+      path = path.squeeze '/'
+      path.prepend '/' unless path[0] == '/'
+      collection = path.end_with?('/')
+      path = ::File.expand_path path
+      path << '/' if collection and !path.end_with?('/')
+      path
     end
 
 
