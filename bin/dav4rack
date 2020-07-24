@@ -97,6 +97,13 @@ end.to_app
 
 runners = []
 runners << lambda do |x|
+  print 'Looking for puma... '
+  require 'puma'
+  require 'rack/handler/puma'
+  puts 'OK'
+  Rack::Handler::Puma.run(x, :Port => 3000)
+end
+runners << lambda do |x|
   print 'Looking for unicorn... '
   require 'unicorn'
   puts 'OK'
@@ -105,12 +112,6 @@ runners << lambda do |x|
   else
     Unicorn::HttpServer.new(x, :listeners => ["0.0.0.0:3000"]).start.join
   end
-end
-runners << lambda do |x|
-  print 'Looking for mongrel... '
-  require 'mongrel'
-  puts 'OK'
-  Rack::Handler::Mongrel.run(x, :Port => 3000)
 end
 runners << lambda do |x|
   puts 'Loading WEBrick'
