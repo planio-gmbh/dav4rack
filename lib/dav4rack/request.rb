@@ -19,7 +19,7 @@ module DAV4Rack
     def initialize(env, options = {})
       super env
       @options = { recursive_propfind_allowed: true }.merge options
-      sanitize_path_info
+      self.path_info = expand_path path_info
     end
 
 
@@ -189,10 +189,6 @@ module DAV4Rack
       request_method != 'PROPFIND' or @options[:recursive_propfind_allowed]
     end
 
-    def sanitize_path_info
-      self.path_info.force_encoding 'UTF-8'
-      self.path_info = expand_path path_info
-    end
 
     def parse_request_body
       return Nokogiri.XML(body.read){ |config|
