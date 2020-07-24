@@ -14,6 +14,10 @@ class RequestTest < Minitest::Test
     DAV4Rack::Request.new(env, options)
   end
 
+  def test_litmus_put_get_utf8_segment
+    assert_equal '/litmus/res-€', request('PATH_INFO' => '/litmus/res-%e2%82%ac').unescaped_path
+  end
+
   def test_should_have_unescaped_path
     assert_equal '/fo o/a', request('PATH_INFO' => '/fo%20o/a').unescaped_path
     assert_equal '/fo o/a', request('PATH_INFO' => '/fo%20o/a').unescaped_path_info

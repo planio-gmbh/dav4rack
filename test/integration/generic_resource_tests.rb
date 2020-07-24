@@ -74,6 +74,15 @@ module GenericResourceTests
     assert_equal 'body', @response.body
   end
 
+  def test_litmus_put_get_utf8_segment
+    put '/res-%e2%82%ac', input: 'body'
+    assert_response :created
+
+    get '/res-%e2%82%ac'
+    assert_response :ok
+    assert_equal 'body', @response.body
+  end
+
   def test_should_create_a_resource_and_allow_its_retrieval
     put '/test.txt', input: 'body'
     assert_response :created
