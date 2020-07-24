@@ -21,7 +21,9 @@ class HandlerTest < DAV4RackTest
 
   def test_should_instantiate_controller_and_call_corresponding_method
     status, headers, body = @handler.call env_for(:get, '/')
-    assert_equal 'GET', body.body.join
+    body_str = ''
+    body.each{|s| body_str << s}
+    assert_equal 'GET', body_str
     assert_equal '3', headers['Content-Length']
     assert_equal 200, status
   end

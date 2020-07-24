@@ -2,9 +2,10 @@ services:
   - mongodb
 language: ruby
 rvm:
-  - 2.2.5
-  - 2.3.1
-  - 2.4.1
+  - 2.4.10
+  - 2.5.8
+  - 2.6.6
+  - 2.7.1
 env:
   global:
     - RUBYOPT=-W1
