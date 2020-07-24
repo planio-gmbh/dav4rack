@@ -1,22 +1,38 @@
 services:
   - mongodb
+
 language: ruby
+
 rvm:
   - 2.4.10
   - 2.5.8
   - 2.6.6
   - 2.7.1
+
+branches:
+  only:
+    - master
+
+# litmus fails due to bad uri parsing with Ruby < 2.6
+jobs:
+  allow_failures:
+    - rvm: 2.4.10
+    - rvm: 2.5.8
+
 env:
   global:
     - RUBYOPT=-W1
+
 before_install:
   - gem update --system
   - gem --version # make sure rubygems actually were updated
   - ./test/setup_litmus.sh
+
 before_script:
   - rm -rf /tmp/dav-file-store
   - mkdir /tmp/dav-file-store
   - bundle exec dav4rack --root /tmp/dav-file-store &
+
 script:
   - bundle exec rake
   - ./test/litmus_travis.sh
