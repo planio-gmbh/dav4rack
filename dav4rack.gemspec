@@ -12,7 +12,6 @@ Gem::Specification.new do |s|
   s.description = 'WebDAV handler for Rack'
   s.require_path = 'lib'
   s.executables << 'dav4rack'
-  s.has_rdoc = true
   s.extra_rdoc_files = ['README.rdoc']
   s.add_dependency 'nokogiri', '>= 1.6.0'
   s.add_dependency 'uuidtools', '~> 2.1.1'
