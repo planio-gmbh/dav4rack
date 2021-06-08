@@ -57,10 +57,22 @@ module DAV4Rack
       end
     end
 
+    def d_prefix(value)
+      prefix = "#{DAV_NAMESPACE_NAME}:"
+      value.start_with?(prefix) ? value : prefix + value
+    end
+
+    def ox_lockscope(scope)
+      ox_element D_LOCKSCOPE, Ox::Element.new(d_prefix(scope))
+    end
+    def ox_locktype(type)
+      ox_element D_LOCKTYPE, Ox::Element.new(d_prefix(type))
+    end
+
     def ox_lockentry(scope, type)
       Ox::Element.new(D_LOCKENTRY).tap do |e|
-        e << ox_element(D_LOCKSCOPE, Ox::Element.new(scope))
-        e << ox_element(D_LOCKTYPE,  Ox::Element.new(type))
+        e << ox_lockscope(scope)
+        e << ox_locktype(type)
       end
     end
 
@@ -78,10 +90,10 @@ module DAV4Rack
 
       Ox::Element.new(D_ACTIVELOCK).tap do |activelock|
         if scope
-          activelock << ox_element(D_LOCKSCOPE, scope)
+          activelock << ox_lockscope(scope)
         end
         if type
-          activelock << ox_element(D_LOCKTYPE, type)
+          activelock << ox_locktype(type)
         end
         activelock << ox_element(D_DEPTH, depth)
         activelock << ox_element(D_TIMEOUT,
