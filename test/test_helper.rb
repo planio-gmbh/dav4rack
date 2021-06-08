@@ -36,8 +36,8 @@ class DAV4RackIntegrationTest < DAV4RackTest
   private
 
   METHODS.each do |method|
-    define_method(method.downcase) do |*args|
-      request(method, *args)
+    define_method(method.downcase) do |*args, **kwargs|
+      request(method, *args, **kwargs)
     end
   end
 

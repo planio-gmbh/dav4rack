@@ -57,10 +57,10 @@ module DAV4Rack
     end
 
 
-    def render_lockdiscovery(*args)
+    def render_lockdiscovery(**args)
       render_xml ox_element(D_PROP,
                             ox_element(D_LOCKDISCOVERY,
-                                       ox_activelock(*args))
+                                       ox_activelock(**args))
                            )
     end
 
