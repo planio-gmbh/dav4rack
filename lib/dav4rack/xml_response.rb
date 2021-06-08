@@ -60,7 +60,7 @@ module DAV4Rack
     def render_lockdiscovery(*args)
       render_xml ox_element(D_PROP,
                             ox_element(D_LOCKDISCOVERY,
-                                       activelock(*args))
+                                       ox_activelock(*args))
                            )
     end
 
@@ -70,35 +70,6 @@ module DAV4Rack
     #
 
 
-    # returns an activelock Ox::Element for the given lock data
-    def activelock(time: nil, token:, depth:,
-                      scope: nil, type: nil, owner: nil, root: nil)
-
-      Ox::Element.new(D_ACTIVELOCK).tap do |activelock|
-        if scope
-          activelock << ox_element(D_LOCKSCOPE, scope)
-        end
-        if type
-          activelock << ox_element(D_LOCKTYPE, type)
-        end
-        activelock << ox_element(D_DEPTH, depth)
-        activelock << ox_element(D_TIMEOUT,
-                                 (time ? "Second-#{time}" : INFINITY))
-
-        token = ox_element(D_HREF, token)
-        activelock << ox_element(D_LOCKTOKEN, token)
-
-        if owner
-          activelock << ox_element(D_OWNER, owner)
-        end
-
-        if root
-          root = ox_element(D_HREF, root)
-          activelock << ox_element(D_LOCKROOT, root)
-        end
-      end
-
-    end
 
     def response(href, status)
       r = Ox::Element.new(D_RESPONSE)
