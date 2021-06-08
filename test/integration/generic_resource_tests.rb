@@ -322,7 +322,36 @@ module GenericResourceTests
     refute match['/d:depth'].empty?
     refute match['/d:timeout'].empty?
     refute match['/d:locktoken'].empty?
-    refute match['/d:owner'].empty?
+    assert_equal '<D:href>http://test.de/</D:href>', match['/d:owner'].children.to_s.strip
+  end
+
+  # the 'owner' value must be treated like a dead property, that is, returned
+  # in the exact form it was sent
+  # http://www.webdav.org/specs/rfc4918.html#ELEMENT_owner
+  def test_should_lock_a_resource_with_non_xml_owner
+    put '/test', input: 'body'
+    assert_response :created
+
+    xml = render(:lockinfo) do |x|
+      x.lockscope { x.exclusive }
+      x.locktype { x.write }
+      x.owner { x.text 'some string' }
+    end
+
+    lock '/test', input: xml
+    assert_response :ok
+
+    match = ->(pattern){
+      response_xml.xpath "/d:prop/d:lockdiscovery/d:activelock#{pattern}"
+    }
+
+    refute match[''].empty?
+    refute match['/d:locktype'].empty?
+    refute match['/d:lockscope'].empty?
+    refute match['/d:depth'].empty?
+    refute match['/d:timeout'].empty?
+    refute match['/d:locktoken'].empty?
+    assert_equal 'some string', match['/d:owner'].children.to_s.strip
   end
 
 

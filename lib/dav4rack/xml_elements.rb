@@ -91,7 +91,13 @@ module DAV4Rack
         activelock << ox_element(D_LOCKTOKEN, token)
 
         if owner
-          activelock << ox_element(D_OWNER, owner)
+          # owner can be abitrary XML or just a string
+          value = begin
+            Ox.parse owner
+          rescue Ox::ParseError
+            owner
+          end
+          activelock << ox_element(D_OWNER, value)
         end
 
         if root
