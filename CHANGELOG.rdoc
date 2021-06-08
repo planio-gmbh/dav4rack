@@ -1,3 +1,8 @@
+=== v1.1.2
+* tests pass on Ruby 3
+* do not assume lock owner has a href child, preserve any owner value as-is
+* allow passing lock scope and type values without namespace
+
 === v1.1.1
 * fix handling of some paths that were changed by NFKC normalization (i.e. 'º'->'o')
 * adds Request#authorization reader for the HTTP_AUTHORIZATION header
