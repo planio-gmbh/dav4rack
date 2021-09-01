@@ -2,15 +2,14 @@
 # frozen_string_literal: true
 
 require 'pstore'
-require 'webrick/httputils'
 require 'dav4rack/file_resource_lock'
 require 'dav4rack/security_utils'
+require 'rack/mime'
 
 module DAV4Rack
 
   class FileResource < Resource
 
-    include WEBrick::HTTPUtils
     include DAV4Rack::Utils
 
     # If this is a collection, return the child resources.
@@ -55,7 +54,7 @@ module DAV4Rack
       if stat.directory?
         "text/html"
       else
-        mime_type(file_path, DefaultMimeTypes)
+        ::Rack::Mime.mime_type(File.extname(file_path))
       end
     end
 
