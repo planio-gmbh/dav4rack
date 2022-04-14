@@ -78,7 +78,7 @@ class RequestTest < Minitest::Test
 
   def test_should_generate_url
     r = request('PATH_INFO' => '/', 'SCRIPT_NAME' => '/redmine')
-    assert_equal 'https://localhost:443/redmine/fo%20o%5B%23.pdf',
+    assert_equal 'https://localhost/redmine/fo%20o%5B%23.pdf',
       r.url_for('/fo o[#.pdf')
   end
 
