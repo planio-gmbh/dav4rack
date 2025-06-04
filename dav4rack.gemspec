@@ -12,11 +12,11 @@ Gem::Specification.new do |s|
   s.description = 'WebDAV handler for Rack'
   s.require_path = 'lib'
   s.executables << 'dav4rack'
-  s.extra_rdoc_files = ['README.rdoc']
-  s.add_dependency 'nokogiri', '>= 1.6.0'
-  s.add_dependency 'uuidtools', '~> 2.1.1'
+  s.add_dependency 'nokogiri', '~> 1.6'
+  s.add_dependency 'uuidtools', '~> 2.1'
   s.add_dependency 'rack', '~> 3.1'
-  s.add_dependency 'ox', '>= 2.1.0'
-  s.add_dependency 'addressable', '>= 2.5.0'
+  s.add_dependency 'ox', '~> 2.1'
+  s.add_dependency 'addressable', '~> 2.5'
+  s.required_ruby_version = '~> 3.0'
   s.files = Dir["{lib}/**/*.rb", "bin/*", "LICENSE", "*.md", "*.rdoc"]
 end

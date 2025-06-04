@@ -1,3 +1,5 @@
+* fixed open-ended dependencies
+* implement changes to work with Rack 3, bump dependency to ~> 3.x
 * remove dependency on Webrick
 
 === v1.1.2
