@@ -76,7 +76,7 @@ module DAV4Rack
         response['Content-Length'] = response.body.bytesize.to_s
         OK
       else
-        status, headers, body = Rack::File.new(root).call(request.env)
+        status, headers, body = Rack::Files.new(root).call(request.env)
         headers.each do |k, v|
           response[k] = v
         end
@@ -166,7 +166,7 @@ module DAV4Rack
     #
     # Create this resource as collection.
     def make_collection
-      if(request.body.read.to_s == '')
+      if(request.body&.read.to_s == '')
         if(::File.directory?(file_path))
           MethodNotAllowed
         else

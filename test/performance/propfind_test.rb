@@ -41,7 +41,7 @@ class PropfindTest < DAV4RackIntegrationTest
 
     assert b.real <= 3.0, "time taken should be less than 3 seconds, was: #{b.real}"
 
-    assert_match(/http:\/\/localhost(:\d+)?\//, multistatus_response('/d:href').first.text.strip)
+    assert_match(/http:\/\/example.org(:\d+)?\//, multistatus_response('/d:href').first.text.strip)
     props = %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength)
     props.each do |prop|
       refute multistatus_response("/d:propstat/d:prop/d:#{prop}").empty?

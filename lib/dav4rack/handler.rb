@@ -36,7 +36,7 @@ module DAV4Rack
 
       # Apache wants the body dealt with, so just read it and junk it
       buf = true
-      buf = request.body.read(8192) while buf
+      buf = request.body&.read(8192) while buf
 
       if Logger.debug? and response.body.is_a?(String)
         Logger.debug "Response String:\n#{response.body}"

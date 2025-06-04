@@ -96,7 +96,7 @@ module GenericResourceTests
   def test_should_return_an_absolute_url_after_a_put_request
     put '/test', :input => 'body'
     assert_response :created
-    assert_match(/http:\/\/localhost(:\d+)?\/test/, @response['Location'])
+    assert_match(/http:\/\/example.org(:\d+)?\/test/, @response['Location'])
   end
 
   def test_should_create_and_find_a_url_with_escaped_characters
@@ -251,7 +251,7 @@ module GenericResourceTests
     assert_response :created
     propfind('/folder', :input => propfind_xml(:resourcetype))
     refute multistatus_response('/d:propstat/d:prop/d:resourcetype/d:collection').empty?
-    assert_match(/http:\/\/localhost(:\d+)?\/folder/, multistatus_response('/d:href').first.text)
+    assert_match(/http:\/\/example.org(:\d+)?\/folder/, multistatus_response('/d:href').first.text)
   end
 
   def test_should_not_find_properties_for_nonexistent_resources
@@ -264,7 +264,7 @@ module GenericResourceTests
 
     propfind '/', input: xml
 
-    assert_match(/http:\/\/localhost(:\d+)?\//,
+    assert_match(/http:\/\/example.org(:\d+)?\//,
                  multistatus_response('/d:href').first.text.strip)
 
     %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength).each do |prop|
@@ -277,7 +277,7 @@ module GenericResourceTests
 
     propfind '/', input: xml
 
-    assert_match(/http:\/\/localhost(:\d+)?\//,
+    assert_match(/http:\/\/example.org(:\d+)?\//,
                  multistatus_response('/d:href').first.text.strip)
 
     %w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength).each do |prop|

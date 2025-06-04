@@ -6,16 +6,10 @@ require 'dav4rack'
 require 'nokogiri'
 require 'addressable/uri'
 
-class DAV4RackTest < MiniTest::Test
+class DAV4RackTest < Minitest::Test
 
   def env_for(method, path, env = {})
-    Rack::MockRequest::DEFAULT_ENV.merge(
-      'HTTP_HOST' => 'localhost',
-      Rack::RACK_URL_SCHEME => 'http',
-      'REMOTE_USER' => 'user',
-      'PATH_INFO' => Addressable::URI.encode_component(path),
-      'REQUEST_METHOD' => method.to_s.upcase,
-    ).merge env
+    Rack::MockRequest.env_for(path, env.merge(method: method))
   end
 end
 
@@ -42,22 +36,18 @@ class DAV4RackIntegrationTest < DAV4RackTest
   end
 
   def request(method, path = '/', input: nil, env: {}, options: {})
-    env = env_for method, path, env
-
     if input
       input = StringIO.new input if input.is_a? String
       env[Rack::RACK_INPUT] = input
       env['CONTENT_LENGTH'] = input.size.to_s
     end
 
-
     if defined? @handler
-
       r = Rack::MockRequest.new(@handler)
       path = Addressable::URI.encode_component path
       @response = r.request(method, path, env)
-
     else
+      env = env_for method, path, env
 
       @options ||= {
         root: DOC_ROOT,
