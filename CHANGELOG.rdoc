@@ -1,3 +1,5 @@
+* remove dependency on Webrick
+
 === v1.1.2
 * tests pass on Ruby 3
 * do not assume lock owner has a href child, preserve any owner value as-is
