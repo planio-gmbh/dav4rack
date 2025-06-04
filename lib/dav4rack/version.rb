@@ -13,5 +13,5 @@ module DAV4Rack
     end
   end
 
-  VERSION = Version.new('1.1.2')
+  VERSION = Version.new('1.2.0')
 end
